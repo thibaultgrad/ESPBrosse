@@ -33,7 +33,8 @@ boolean set_gyro_angles;
 
 long acc_x, acc_y, acc_z;
 
-long loop_timer;
+//long loop_timer;
+
 int temp;
 
 enum Etats
@@ -63,6 +64,21 @@ int nb_spray_non_enregistre;
 #define nb_spray_avt_refresh 10
 
 const char *stateStr[] = {"Attente", "Spraying", "Attente_demarrage", "Erreur", "Niveau_produit_bas"};
+
+double gravity;
+double angle;
+double angle_brut = 0;
+
+int i = 0;
+// periode d'échantillonnage en ms
+#define MS_PERIOD_ECH  2
+
+// temps de moyennage du courant
+#define MS_MOYENNE    140
+#define TAILLE_TABLEAU_ECHANTILLONS   (MS_MOYENNE / MS_PERIOD_ECH)
+
+int indexechantilon = 0;
+uint8_t echantillon_angle[TAILLE_TABLEAU_ECHANTILLONS] = { 0 };
 
 void ReadSavedDatas()
 {
@@ -110,9 +126,9 @@ void UpdatePodoState()
   podomaticStateService.update(
       [](PodomaticState &state) {
         state.etat = (String)stateStr[(int)etat];
-        state.mesure_niveau = 10;
+        state.mesure_niveau = angle;
         state.presence = presence;
-        state.duree_etat = duree_etat / 1000.0;
+        state.duree_etat = acc_z;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
@@ -174,8 +190,20 @@ void read_mpu_6050_data()
   gyro_y = Wire.read() << 8 | Wire.read();
   gyro_z = Wire.read() << 8 | Wire.read();
 }
-float gravity;
-float angle;
+void Echantillonnageangle()
+{
+	echantillon_angle[indexechantilon] = angle_brut;
+	for (i = 0; i < TAILLE_TABLEAU_ECHANTILLONS; i++)
+	{
+		angle += echantillon_angle[i];
+	}
+	angle = angle / TAILLE_TABLEAU_ECHANTILLONS;
+	indexechantilon++;
+	if (indexechantilon == TAILLE_TABLEAU_ECHANTILLONS)
+	{
+		indexechantilon = 0;
+	}
+}
 
 void setup()
 {
@@ -199,12 +227,13 @@ void setup()
 
   // start the server
   server.begin();
-  Wire.begin(); //Start I2C as master
+  Wire.begin(4,5); //Start I2C as master
   setup_mpu_6050_registers();
 
-  ReadSavedDatas();
+  //ReadSavedDatas();
+  delay(40);
   read_mpu_6050_data();
-  gravity = acc_z;
+  gravity = (double)acc_z;
 
   pinMode(pin_detection, INPUT);
 
@@ -218,75 +247,76 @@ void loop()
   esp8266React.loop();
 
   read_mpu_6050_data();
-
-  angle = acos((float)acc_z / gravity) * 57.296;  
-
-      if (abs(refresh_date - millis()) > 1000)
-  {
-    ReadSettings();
-    if (Reset_counters == true)
-    {
-      nb_total_passage = 0;
-      temps_total_spray = 0;
-      Reset_counters = false;
-      UpdateSavedDatas();
-    }
-    refresh_date = millis();
-  }
+  float ratio = (double)acc_z / gravity;
+  ratio = constrain(ratio,-1,1);
+  angle_brut = acos(ratio) * 57.296;
+  Echantillonnageangle();  
+  //     if (abs(refresh_date - millis()) > 1000)
+  // {
+  //   ReadSettings();
+  //   if (Reset_counters == true)
+  //   {
+  //     nb_total_passage = 0;
+  //     temps_total_spray = 0;
+  //     Reset_counters = false;
+  //     UpdateSavedDatas();
+  //   }
+  //   refresh_date = millis();
+  // }
 
   presence = digitalRead(pin_detection);
   duree_etat = (unsigned int)abs(millis() - t_debut_etat);
   UpdatePodoState();
-  int val_etat = (int)etat;
-  switch (val_etat)
-  {
-  case (int)Attente:
-  {
-    if ((presence) && (duree_etat > MS_Arret))
-    {
-      etat = Attente_demarrage;
-      t_debut_etat = millis();
-    }
-    break;
-  }
-  case (int)Attente_demarrage:
-  {
-    if (duree_etat > MS_RETARD_DEMARRAGE)
-    {
-      etat = Spraying;
-      SprayOn();
-    }
-    break;
-  }
-  case (int)Spraying:
-  {
-    if (duree_etat > MS_SPRAY)
-    {
-      ajout_temps_spraying();
-      if (MS_RETARD_DEMARRAGE <= 0 && MS_Arret <= 0 && presence)
-      {
-        t_debut_etat = millis();
-      }
-      else
-      {
-        etat = Attente;
-        SprayOff();
-      }
-    }
+  // int val_etat = (int)etat;
+  // switch (val_etat)
+  // {
+  // case (int)Attente:
+  // {
+  //   if ((presence) && (duree_etat > MS_Arret))
+  //   {
+  //     etat = Attente_demarrage;
+  //     t_debut_etat = millis();
+  //   }
+  //   break;
+  // }
+  // case (int)Attente_demarrage:
+  // {
+  //   if (duree_etat > MS_RETARD_DEMARRAGE)
+  //   {
+  //     etat = Spraying;
+  //     SprayOn();
+  //   }
+  //   break;
+  // }
+  // case (int)Spraying:
+  // {
+  //   if (duree_etat > MS_SPRAY)
+  //   {
+  //     ajout_temps_spraying();
+  //     if (MS_RETARD_DEMARRAGE <= 0 && MS_Arret <= 0 && presence)
+  //     {
+  //       t_debut_etat = millis();
+  //     }
+  //     else
+  //     {
+  //       etat = Attente;
+  //       SprayOff();
+  //     }
+  //   }
 
-    break;
-  }
-  case (int)Erreur:
-  {
-    break;
-  }
-  case (int)Niveau_produit_bas:
-  {
-    break;
-  }
-  default:
-  {
-    break;
-  }
-  }
+  //   break;
+  // }
+  // case (int)Erreur:
+  // {
+  //   break;
+  // }
+  // case (int)Niveau_produit_bas:
+  // {
+  //   break;
+  // }
+  // default:
+  // {
+  //   break;
+  // }
+  // }
 }

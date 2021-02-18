@@ -44,7 +44,7 @@ function PodomaticStateWebSocketControllerForm(props: PodomaticStateWebSocketCon
     Etat en cours : {data.etat} (<NumberFormat value={data.duree_etat} displayType={'text'} decimalSeparator=',' decimalScale={1} /> s)
     </Typography>
     <Typography variant="body1">
-    Niveau produit : {data.mesure_niveau} mm
+    Angle mesuré : <NumberFormat value={data.mesure_niveau} displayType={'text'} decimalSeparator=',' decimalScale={1} /> °
     </Typography>
     <Typography variant="body1"> Cellule {data.presence ? "barrée":"ouverte"} <Checkbox checked={data.presence} readOnly/></Typography>
     <Typography variant="body1">
