@@ -55,7 +55,7 @@ unsigned int duree_etat;
 bool presence = false;
 Etats etat = Attente;
 
-#define pin_moteur_relais1 13
+#define pin_moteur_relais1 2
 #define pin_moteur_relais2 4
 
 #define pin_detection 5
@@ -128,7 +128,7 @@ void UpdatePodoState()
         state.etat = (String)stateStr[(int)etat];
         state.mesure_niveau = angle;
         state.presence = presence;
-        state.duree_etat = acc_z;
+        state.duree_etat = duree_etat;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
@@ -244,13 +244,15 @@ void setup()
 void loop()
 {
   // run the framework's loop function
+  loop_timer = millis();
   esp8266React.loop();
 
   read_mpu_6050_data();
   float ratio = (double)acc_z / gravity;
   ratio = constrain(ratio,-1,1);
   angle_brut = acos(ratio) * 57.296;
-  Echantillonnageangle();  
+  Echantillonnageangle(); 
+  digitalWrite(pin_moteur_relais1,angle >=25); 
   //     if (abs(refresh_date - millis()) > 1000)
   // {
   //   ReadSettings();
@@ -264,8 +266,8 @@ void loop()
   //   refresh_date = millis();
   // }
 
-  presence = digitalRead(pin_detection);
-  duree_etat = (unsigned int)abs(millis() - t_debut_etat);
+  ///presence = digitalRead(pin_detection);
+  duree_etat = (unsigned int)abs(millis() - loop_timer);
   UpdatePodoState();
   // int val_etat = (int)etat;
   // switch (val_etat)
