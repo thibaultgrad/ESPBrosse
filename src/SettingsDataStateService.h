@@ -5,6 +5,7 @@
 #include <HttpEndpoint.h>
 #include <FSPersistence.h>
 #include <ESPFS.h>
+//#include <Time.h>
 
 
 #define SETTINGS_DATAS_SETTINGS_ENDPOINT_PATH "/rest/SettingsDataState"
@@ -13,32 +14,36 @@
 
 class SettingsDataState {
  public:
-	unsigned long MS_SPRAY;
-	unsigned int MS_RETARD_DEMARRAGE;
-	unsigned int MS_Arret;
-	unsigned int D_Min_level_cuve;
-    bool Reset_counters;
+	unsigned long MS_Brossage;
+	unsigned int Angl_declenchement;
+	unsigned int MS_Surcourant;
+	float Courant_max;
+    bool Reset_counters; 
+    time_t Date_RAZ;
 
   static void read(SettingsDataState& settings, JsonObject& root) {
-    root["MS_SPRAY"] = settings.MS_SPRAY;
-    root["MS_RETARD_DEMARRAGE"] = settings.MS_RETARD_DEMARRAGE;
-    root["MS_Arret"] = settings.MS_Arret;
-    root["D_Min_level_cuve"] = settings.D_Min_level_cuve;
+    root["MS_Brossage"] = settings.MS_Brossage;
+    root["Angl_declenchement"] = settings.Angl_declenchement;
+    root["MS_Surcourant"] = settings.MS_Surcourant;
+    root["Courant_max"] = settings.Courant_max;
     root["Reset_counters"] = settings.Reset_counters;
+    root["Date_RAZ"]=settings.Date_RAZ;
   }
 
   static StateUpdateResult update(JsonObject& root, SettingsDataState& savedState) {
-    unsigned long newMSpray = root.containsKey("MS_SPRAY") ? root["MS_SPRAY"]:1;
-    unsigned int newMSRetard = root.containsKey("MS_RETARD_DEMARRAGE") ? root["MS_RETARD_DEMARRAGE"]:1;   
-    unsigned int newMSArret = root.containsKey("MS_Arret") ? root["MS_Arret"]:1;
-    unsigned int newMinLevel = root.containsKey("D_Min_level_cuve") ? root["D_Min_level_cuve"]:1;
+    unsigned long newMBrossage = root.containsKey("MS_Brossage") ? root["MS_Brossage"]:1;
+    unsigned int newMSRetard = root.containsKey("Angl_declenchement") ? root["Angl_declenchement"]:1;   
+    unsigned int newMSArret = root.containsKey("MS_Surcourant") ? root["MS_Surcourant"]:1;
+    float newCourantMax = root.containsKey("Courant_max") ? root["Courant_max"]:1;
     bool newReset = root.containsKey("Reset_counters") ? root["Reset_counters"]:false;
-    if ( ((savedState.MS_SPRAY) != newMSpray) |((savedState.MS_RETARD_DEMARRAGE) != newMSRetard) |((savedState.MS_Arret) != newMSArret) |((savedState.D_Min_level_cuve) != newMinLevel)|((savedState.Reset_counters) != newReset) ) {
-      savedState.MS_SPRAY = newMSpray;
-      savedState.MS_RETARD_DEMARRAGE = newMSRetard;
-      savedState.MS_Arret = newMSArret;
-      savedState.D_Min_level_cuve = newMinLevel;
+    time_t newDateRaz=root.containsKey("Date_RAZ") ? root["Date_RAZ"]: 0;
+    if ( ((savedState.MS_Brossage) != newMBrossage) |((savedState.Angl_declenchement) != newMSRetard) |((savedState.MS_Surcourant) != newMSArret) |((savedState.Courant_max) != newCourantMax)|((savedState.Reset_counters) != newReset) ) {
+      savedState.MS_Brossage = newMBrossage;
+      savedState.Angl_declenchement = newMSRetard;
+      savedState.MS_Surcourant = newMSArret;
+      savedState.Courant_max = newCourantMax;
       savedState.Reset_counters=newReset;
+      savedState.Date_RAZ=newDateRaz;
       return StateUpdateResult::CHANGED;
     }
     return StateUpdateResult::UNCHANGED;

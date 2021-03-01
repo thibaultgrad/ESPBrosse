@@ -14,10 +14,10 @@ SettingsDataStateService::SettingsDataStateService(AsyncWebServer* server, Secur
 }
 
 void SettingsDataStateService::begin() {
-  _state.MS_SPRAY = 1;
-  _state.MS_RETARD_DEMARRAGE = 1;
-  _state.MS_Arret = 1;
-  _state.D_Min_level_cuve = 1;
+  _state.MS_Brossage = 120000;
+  _state.Courant_max = 2.3;
+  _state.Date_RAZ = (time_t)__DATE__;
+  _state.MS_Surcourant = 30000;
   _state.Reset_counters = false;
   _fsPersistence.readFromFS();
   onConfigUpdated();

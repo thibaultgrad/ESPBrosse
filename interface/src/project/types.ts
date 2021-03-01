@@ -9,10 +9,10 @@ export interface SavedDataState {
 }
 
 export interface SettingsDataState{
-  MS_SPRAY : number;
-  MS_RETARD_DEMARRAGE : number;
-  MS_Arret : number;
-  D_Min_level_cuve : number;
+  MS_Brossage : number;
+  Courant_max : number;
+  MS_Surcourant : number;
+  Date_RAZ : Date;
   Reset_counters : boolean;
 }
 

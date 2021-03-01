@@ -20,8 +20,8 @@ unsigned int D_Min_mm;
 unsigned int D_Max_mm;
 unsigned long MS_SPRAY;
 unsigned int MS_RETARD_DEMARRAGE;
-unsigned int MS_Arret;
-unsigned int D_Min_level_cuve;
+float MS_Arret;
+time_t Date_RAZ;
 bool Reset_counters;
 
 unsigned long refresh_date;
@@ -90,10 +90,10 @@ void ReadSavedDatas()
 void ReadSettings()
 {
   settingsDataStateService.read([](SettingsDataState _state) {
-    MS_SPRAY = _state.MS_SPRAY;
-    MS_RETARD_DEMARRAGE = _state.MS_RETARD_DEMARRAGE;
-    MS_Arret = _state.MS_Arret;
-    D_Min_level_cuve = _state.D_Min_level_cuve;
+    MS_SPRAY = _state.MS_Brossage;
+    MS_RETARD_DEMARRAGE = _state.MS_Surcourant;
+    MS_Arret = _state.Courant_max;
+    Date_RAZ = _state.Date_RAZ;
     Reset_counters = _state.Reset_counters;
   });
 }
@@ -112,10 +112,10 @@ void UpdateSettings()
 {
   settingsDataStateService.update(
       [](SettingsDataState &state) {
-        state.MS_SPRAY = MS_SPRAY;
-        state.MS_RETARD_DEMARRAGE = MS_RETARD_DEMARRAGE;
-        state.MS_Arret = MS_Arret;
-        state.D_Min_level_cuve = D_Min_level_cuve;
+        state.MS_Brossage = MS_SPRAY;
+        state.MS_Surcourant = MS_RETARD_DEMARRAGE;
+        state.Courant_max = MS_Arret;
+        state.Date_RAZ = Date_RAZ;
         state.Reset_counters = Reset_counters;
         return StateUpdateResult::CHANGED;
       },
@@ -244,7 +244,7 @@ void setup()
 void loop()
 {
   // run the framework's loop function
-  loop_timer = millis();
+  // loop_timer = millis();
   esp8266React.loop();
 
   read_mpu_6050_data();
@@ -253,18 +253,18 @@ void loop()
   angle_brut = acos(ratio) * 57.296;
   Echantillonnageangle(); 
   digitalWrite(pin_moteur_relais1,angle >=25); 
-  //     if (abs(refresh_date - millis()) > 1000)
-  // {
-  //   ReadSettings();
-  //   if (Reset_counters == true)
-  //   {
-  //     nb_total_passage = 0;
-  //     temps_total_spray = 0;
-  //     Reset_counters = false;
-  //     UpdateSavedDatas();
-  //   }
-  //   refresh_date = millis();
-  // }
+ if (abs(refresh_date - millis()) > 1000)
+  {
+    ReadSettings();
+    if (Reset_counters == true)
+    {
+      nb_total_passage = 0;
+      temps_total_spray = 0;
+      Reset_counters = false;
+      UpdateSavedDatas();
+    }
+    refresh_date = millis();
+  }
 
   ///presence = digitalRead(pin_detection);
   duree_etat = (unsigned int)abs(millis() - loop_timer);

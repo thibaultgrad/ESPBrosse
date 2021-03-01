@@ -52,10 +52,10 @@ function SettingsDataStateRestControllerForm(props: SettingsDataStateRestControl
         Reglage des parametres :
         </Typography>
       </Box>
-      <TextField id="standard-basic" label="Temps de spray(ms)" onChange={handleValueChange('MS_SPRAY')} value={data.MS_SPRAY} color="secondary" />
-      <TextField id="standard-basic" label="Retard demarrage(ms)" onChange={handleValueChange('MS_RETARD_DEMARRAGE')} value={data.MS_RETARD_DEMARRAGE} color="secondary" />
-      <TextField id="standard-basic" label="Temps arret (ms)" onChange={handleValueChange('MS_Arret')} value={data.MS_Arret} color="secondary" />
-      <TextField id="standard-basic" label="Level min cuve(mm)" onChange={handleValueChange('D_Min_level_cuve')} value={data.D_Min_level_cuve} color="secondary" />
+      <TextField id="standard-basic" label="Duréee d'un cycle de brossage (ms)" onChange={handleValueChange('MS_Brossage')} value={data.MS_Brossage} color="secondary" />
+      <TextField id="standard-basic" label="Durée d'arret apres surcourant (ms)" onChange={handleValueChange('MS_Surcourant')} value={data.MS_Surcourant} color="secondary" />
+      <TextField id="date" label="Date de remise à zero" type="date" onChange={handleValueChange('Date_RAZ')} value={data.Date_RAZ} color="secondary" />
+      <TextField id="standard-basic" label="Level min cuve(mm)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
       <FormActions>
         <FormButton startIcon={<SaveIcon />} variant="contained" color="primary" type="submit">
           Save
