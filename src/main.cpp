@@ -21,7 +21,7 @@ unsigned int D_Max_mm;
 unsigned long MS_SPRAY;
 unsigned int MS_RETARD_DEMARRAGE;
 float MS_Arret;
-time_t Date_RAZ;
+String Date_RAZ;
 bool Reset_counters;
 
 unsigned long refresh_date;

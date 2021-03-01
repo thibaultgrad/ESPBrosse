@@ -19,7 +19,7 @@ class SettingsDataState {
 	unsigned int MS_Surcourant;
 	float Courant_max;
     bool Reset_counters; 
-    time_t Date_RAZ;
+    String Date_RAZ;
 
   static void read(SettingsDataState& settings, JsonObject& root) {
     root["MS_Brossage"] = settings.MS_Brossage;
@@ -36,14 +36,14 @@ class SettingsDataState {
     unsigned int newMSArret = root.containsKey("MS_Surcourant") ? root["MS_Surcourant"]:1;
     float newCourantMax = root.containsKey("Courant_max") ? root["Courant_max"]:1;
     bool newReset = root.containsKey("Reset_counters") ? root["Reset_counters"]:false;
-    time_t newDateRaz=root.containsKey("Date_RAZ") ? root["Date_RAZ"]: 0;
+    String newDateRaz=root.containsKey("Date_RAZ") ? root["Date_RAZ"]: String("no date");
     if ( ((savedState.MS_Brossage) != newMBrossage) |((savedState.Angl_declenchement) != newMSRetard) |((savedState.MS_Surcourant) != newMSArret) |((savedState.Courant_max) != newCourantMax)|((savedState.Reset_counters) != newReset) ) {
       savedState.MS_Brossage = newMBrossage;
       savedState.Angl_declenchement = newMSRetard;
       savedState.MS_Surcourant = newMSArret;
       savedState.Courant_max = newCourantMax;
       savedState.Reset_counters=newReset;
-      savedState.Date_RAZ=newDateRaz;
+      savedState.Date_RAZ=root["Date_RAZ"].as<String>();
       return StateUpdateResult::CHANGED;
     }
     return StateUpdateResult::UNCHANGED;

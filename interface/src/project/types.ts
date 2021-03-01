@@ -12,7 +12,7 @@ export interface SettingsDataState{
   MS_Brossage : number;
   Courant_max : number;
   MS_Surcourant : number;
-  Date_RAZ : Date;
+  Date_RAZ : String;
   Reset_counters : boolean;
 }
 

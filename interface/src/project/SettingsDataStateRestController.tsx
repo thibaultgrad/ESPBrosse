@@ -54,8 +54,8 @@ function SettingsDataStateRestControllerForm(props: SettingsDataStateRestControl
       </Box>
       <TextField id="standard-basic" label="Duréee d'un cycle de brossage (ms)" onChange={handleValueChange('MS_Brossage')} value={data.MS_Brossage} color="secondary" />
       <TextField id="standard-basic" label="Durée d'arret apres surcourant (ms)" onChange={handleValueChange('MS_Surcourant')} value={data.MS_Surcourant} color="secondary" />
-      <TextField id="date" label="Date de remise à zero" type="date" onChange={handleValueChange('Date_RAZ')} value={data.Date_RAZ} color="secondary" />
-      <TextField id="standard-basic" label="Level min cuve(mm)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
+      <TextField id="standard-basic" label="Date de remise à zero" type="datetime-local" onChange={handleValueChange('Date_RAZ')} value={data.Date_RAZ} color="secondary" />
+      <TextField id="standard-basic" label="Courant Max (A)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
       <FormActions>
         <FormButton startIcon={<SaveIcon />} variant="contained" color="primary" type="submit">
           Save

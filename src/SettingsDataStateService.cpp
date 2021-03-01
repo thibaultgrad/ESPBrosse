@@ -16,7 +16,7 @@ SettingsDataStateService::SettingsDataStateService(AsyncWebServer* server, Secur
 void SettingsDataStateService::begin() {
   _state.MS_Brossage = 120000;
   _state.Courant_max = 2.3;
-  _state.Date_RAZ = (time_t)__DATE__;
+  _state.Date_RAZ = (String)__DATE__;
   _state.MS_Surcourant = 30000;
   _state.Reset_counters = false;
   _fsPersistence.readFromFS();
