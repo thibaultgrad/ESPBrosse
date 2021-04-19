@@ -10,11 +10,11 @@ import { BrosseState } from './types';
 import NumberFormat from 'react-number-format';
 import { format } from 'path';
 
-export const LIGHT_SETTINGS_WEBSOCKET_URL = WEB_SOCKET_ROOT + "PodomaticState";
+export const LIGHT_SETTINGS_WEBSOCKET_URL = WEB_SOCKET_ROOT + "BrosseState";
 
-type PodomaticStateWebSocketControllerProps = WebSocketControllerProps<BrosseState>;
+type BrosseStateWebSocketControllerProps = WebSocketControllerProps<BrosseState>;
 
-class PodomaticStateWebSocketController extends Component<PodomaticStateWebSocketControllerProps> {
+class BrosseStateWebSocketController extends Component<BrosseStateWebSocketControllerProps> {
 
   render() {
     return (
@@ -22,7 +22,7 @@ class PodomaticStateWebSocketController extends Component<PodomaticStateWebSocke
         <WebSocketFormLoader
           {...this.props}
           render={props => (
-            <PodomaticStateWebSocketControllerForm {...props} />
+            <BrosseStateWebSocketControllerForm {...props} />
           )}
         />
       </SectionContent>
@@ -31,11 +31,11 @@ class PodomaticStateWebSocketController extends Component<PodomaticStateWebSocke
 
 }
 
-export default webSocketController(LIGHT_SETTINGS_WEBSOCKET_URL, 100, PodomaticStateWebSocketController);
+export default webSocketController(LIGHT_SETTINGS_WEBSOCKET_URL, 100, BrosseStateWebSocketController);
 
-type PodomaticStateWebSocketControllerFormProps = WebSocketFormProps<BrosseState>;
+type BrosseStateWebSocketControllerFormProps = WebSocketFormProps<BrosseState>;
 
-function PodomaticStateWebSocketControllerForm(props: PodomaticStateWebSocketControllerFormProps) {
+function BrosseStateWebSocketControllerForm(props: BrosseStateWebSocketControllerFormProps) {
   const { data, saveData, setData } = props;
 
   return (
@@ -46,7 +46,7 @@ function PodomaticStateWebSocketControllerForm(props: PodomaticStateWebSocketCon
     <Typography variant="body1">
     Angle mesuré : <NumberFormat value={data.mesure_angle} displayType={'text'} decimalSeparator=',' decimalScale={1} /> °
     </Typography>
-    <Typography variant="body1"> Cellule {data.presence ? "barrée":"ouverte"} <Checkbox checked={data.presence} readOnly/></Typography>
+    <Typography variant="body1"> Cellule {data.shouldRAZ ? "barrée":"ouverte"} <Checkbox checked={data.shouldRAZ} readOnly/></Typography>
     <Typography variant="body1">
     Temps passé dans cet état : <NumberFormat value={data.duree_etat} displayType={'text'} decimalSeparator=',' decimalScale={1} /> s
     </Typography>
