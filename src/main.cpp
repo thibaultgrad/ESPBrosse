@@ -14,17 +14,27 @@ SavedDataStateService savedDataStateService = SavedDataStateService(&server, esp
 SettingsDataStateService settingsDataStateService =
     SettingsDataStateService(&server, esp8266React.getSecurityManager());
 PodomaticStateService podomaticStateService = PodomaticStateService(&server, esp8266React.getSecurityManager());
-double temps_total_spray;
-unsigned long nb_total_passage;
-unsigned int D_Min_mm;
-unsigned int D_Max_mm;
-unsigned long MS_SPRAY;
-unsigned int MS_RETARD_DEMARRAGE;
-float MS_Arret;
+
+#pragma region Parametres de brossage
+float AngleDeclenchement;
+unsigned long nb_total_demarrage;
+unsigned long MS_BROSSAGE;
+unsigned int MS_SurCourant = 15000000;
+unsigned int MS_ARRET = 3000000;
+unsigned int MS_DEMARRAGE_MOTEUR = 1500000;
+float IMax;
+//#define MS_SURCOURANT 15000000 //en microseconde
+//#define MS_DEMARRAGE_MOTEUR 1500000 //en microseconde
+//#define MS_ARRET 3000000 //en microseconde
+#pragma endregion Parametres de brossage
+
+#pragma region Donnees sauvegardees
+double temps_total_brossage;
+unsigned int nb_surcourant;
 String Date_RAZ;
 bool Reset_counters;
-
 unsigned long refresh_date;
+#pragma endregion
 
 //Declaring some global variables
 int gyro_x, gyro_y, gyro_z;
@@ -40,13 +50,14 @@ int temp;
 enum Etats
 {
   Attente,
-  Spraying,
-  Attente_demarrage,
-  Erreur,
-  Niveau_produit_bas,
+  Demarrage,
+  Brossage,
+  SurCourant,
+  DelayAfterStop,
 };
 
-boolean etat_spray;
+bool etat_moteur = false;
+bool SensRotation = true;
 
 unsigned long loop_timer = 0UL;
 
@@ -55,15 +66,14 @@ unsigned int duree_etat;
 bool presence = false;
 Etats etat = Attente;
 
-#define pin_moteur_relais1 2
-#define pin_moteur_relais2 4
+#define pin_moteur_On 14
+#define pin_moteur_Sens_rotation 0
+#define pinCourant A0
 
-#define pin_detection 5
+//int nb_spray_non_enregistre;
+//#define nb_spray_avt_refresh 10
 
-int nb_spray_non_enregistre;
-#define nb_spray_avt_refresh 10
-
-const char *stateStr[] = {"Attente", "Spraying", "Attente_demarrage", "Erreur", "Niveau_produit_bas"};
+const char *stateStr[] = {"Attente", "Brossage", "Demarrage", "SurCourant", "Attente apres arrêt"};
 
 double gravity;
 double angle;
@@ -71,28 +81,52 @@ double angle_brut = 0;
 
 int i = 0;
 // periode d'échantillonnage en ms
-#define MS_PERIOD_ECH  2
+#define MS_PERIOD_ECH 2
 
 // temps de moyennage du courant
-#define MS_MOYENNE    140
-#define TAILLE_TABLEAU_ECHANTILLONS   (MS_MOYENNE / MS_PERIOD_ECH)
+#define MS_MOYENNE 140
+#define TAILLE_TABLEAU_ECHANTILLONS (MS_MOYENNE / MS_PERIOD_ECH)
 
 int indexechantilon = 0;
-uint8_t echantillon_angle[TAILLE_TABLEAU_ECHANTILLONS] = { 0 };
+uint8_t echantillon_angle[TAILLE_TABLEAU_ECHANTILLONS] = {0};
+
+float mVperAmpValue = 100;   // If using ACS712 current module : for 5A module key in 185, for 20A module key in 100, for 30A module key in 66
+                             // If using "Hall-Effect" Current Transformer, key in value using this formula: mVperAmp = maximum voltage range (in milli volt) / current rating of CT
+                             // For example, a 20A Hall-Effect Current Transformer rated at 20A, 2.5V +/- 0.625V, mVperAmp will be 625 mV / 20A = 31.25mV/A
+float offsetSampleRead = 0;  /* to read the value of a sample for offset purpose later */
+float currentSampleRead = 0; /* to read the value of a sample including currentOffset1 value*/
+float currentLastSample = 0; /* to count time for each sample. Technically 1 milli second 1 sample is taken */
+float currentSampleSum = 0;  /* accumulation of sample readings */
+int currentSampleCount = 0;  /* to count number of sample. */
+float currentMean;           /* to calculate the average value from all samples, in analog values*/
+float RMSCurrentMean;        /* square roof of currentMean, in analog values */
+float adjustRMSCurrentMean;  /* RMScurrentMean including currenOffset2, in analog values */
+float FinalRMSCurrent;       /* the final RMS current reading*/
+
+/*1.1 Offset AC Current */
+
+float currentOffset1 = 0; // to Offset deviation and accuracy. Offset any fake current when no current operates.
+                          // Offset will automatically callibrate when SELECT Button on the LCD Display Shield is pressed.
+                          // If you do not have LCD Display Shield, look into serial monitor to add or minus the value manually and key in here.
+                          // 26 means add 26 to all analog value measured
+float currentOffset2 = 0; // to offset value due to calculation error from squared and square root.
+
+float Courant = 0;
 
 void ReadSavedDatas()
 {
   savedDataStateService.read([](SavedDataState _state) {
-    temps_total_spray = _state.temps_total_spray;
-    nb_total_passage = _state.nb_total_passage;
+    temps_total_brossage = _state.temps_total_brossage;
+    nb_total_demarrage = _state.nb_total_demarrage;
+    nb_surcourant = _state.nb_surcourant;
   });
 }
 void ReadSettings()
 {
   settingsDataStateService.read([](SettingsDataState _state) {
-    MS_SPRAY = _state.MS_Brossage;
-    MS_RETARD_DEMARRAGE = _state.MS_Surcourant;
-    MS_Arret = _state.Courant_max;
+    MS_BROSSAGE = _state.MS_Brossage;
+    MS_SurCourant = _state.MS_Surcourant;
+    IMax = _state.Courant_max;
     Date_RAZ = _state.Date_RAZ;
     Reset_counters = _state.Reset_counters;
   });
@@ -102,8 +136,8 @@ void UpdateSavedDatas()
 {
   savedDataStateService.update(
       [](SavedDataState &state) {
-        state.temps_total_spray = temps_total_spray;
-        state.nb_total_passage = nb_total_passage;
+        state.temps_total_brossage = temps_total_brossage;
+        state.nb_total_demarrage = nb_total_demarrage;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
@@ -112,9 +146,9 @@ void UpdateSettings()
 {
   settingsDataStateService.update(
       [](SettingsDataState &state) {
-        state.MS_Brossage = MS_SPRAY;
-        state.MS_Surcourant = MS_RETARD_DEMARRAGE;
-        state.Courant_max = MS_Arret;
+        state.MS_Brossage = MS_BROSSAGE;
+        state.MS_Surcourant = MS_SurCourant;
+        state.Courant_max = IMax;
         state.Date_RAZ = Date_RAZ;
         state.Reset_counters = Reset_counters;
         return StateUpdateResult::CHANGED;
@@ -133,26 +167,28 @@ void UpdatePodoState()
       },
       "Jean");
 }
-void SprayOff()
+void MoteursOff()
 {
   t_debut_etat = millis();
-  digitalWrite(pin_moteur_relais1, LOW);
-  // delay(2);
-  // digitalWrite(pin_moteur_relais2, HIGH);
-  etat_spray = 0;
+  digitalWrite(pin_moteur_On, HIGH);
+  etat_moteur = 0;
 }
-void SprayOn()
+void MoteursOn()
 {
+  InversionSensRotation();
+  nb_total_demarrage++;
   t_debut_etat = millis();
-  etat_spray = 1;
-  digitalWrite(pin_moteur_relais1, HIGH);
-  // delay(2);
-  // digitalWrite(pin_moteur_relais2, LOW);
+  etat_moteur = 1;
+  digitalWrite(pin_moteur_Sens_rotation, LOW);
 }
-void ajout_temps_spraying()
+void InversionSensRotation()
 {
-  temps_total_spray += (double)(duree_etat) / (1000.0 * 3600.0);
-  nb_total_passage++;
+  SensRotation = !SensRotation;
+  digitalWrite(pin_moteur_Sens_rotation, SensRotation);
+}
+void ajout_temps_brossage()
+{
+  temps_total_brossage += (double)(duree_etat) / (1000.0 * 3600.0);
   UpdateSavedDatas();
 }
 void setup_mpu_6050_registers()
@@ -173,7 +209,10 @@ void setup_mpu_6050_registers()
   Wire.write(0x08);             //Set the requested starting register
   Wire.endTransmission();
 }
-
+void SetGravity()
+{
+  gravity = (double)acc_z;
+}
 void read_mpu_6050_data()
 {                               //Subroutine for reading the raw gyro and accelerometer data
   Wire.beginTransmission(0x68); //Start communicating with the MPU-6050
@@ -192,25 +231,53 @@ void read_mpu_6050_data()
 }
 void Echantillonnageangle()
 {
-	echantillon_angle[indexechantilon] = angle_brut;
-	for (i = 0; i < TAILLE_TABLEAU_ECHANTILLONS; i++)
-	{
-		angle += echantillon_angle[i];
-	}
-	angle = angle / TAILLE_TABLEAU_ECHANTILLONS;
-	indexechantilon++;
-	if (indexechantilon == TAILLE_TABLEAU_ECHANTILLONS)
-	{
-		indexechantilon = 0;
-	}
+  float ratio = (double)acc_z / gravity;
+  ratio = constrain(ratio, -1, 1);
+  angle_brut = acos(ratio) * 57.296;
+  echantillon_angle[indexechantilon] = angle_brut;
+  for (i = 0; i < TAILLE_TABLEAU_ECHANTILLONS; i++)
+  {
+    angle += echantillon_angle[i];
+  }
+  angle = angle / TAILLE_TABLEAU_ECHANTILLONS;
+  indexechantilon++;
+  if (indexechantilon == TAILLE_TABLEAU_ECHANTILLONS)
+  {
+    indexechantilon = 0;
+  }
 }
+void echantillonnagecourant()
+{
 
+  offsetSampleRead = analogRead(pinCourant) - 512;                   /* Read analog value. This is for offset purpose */
+  currentSampleRead = analogRead(pinCourant) - 512 + currentOffset1; /* read the sample value including offset value*/
+  currentSampleSum = currentSampleSum + sq(currentSampleRead);       /* accumulate total analog values for each sample readings*/
+
+  currentSampleCount += 1;
+  //tension += 0.01;/* to count and move on to the next following count */
+  /* to reset the time again so that next cycle can start again*/
+
+  if (currentSampleCount >= 50) /* after 1000 count or 1000 milli seconds (1 second), do this following codes*/
+  {
+    currentMean = currentSampleSum / currentSampleCount;                        /* average accumulated analog values*/
+    RMSCurrentMean = sqrt(currentMean);                                         /* square root of the average value*/
+    adjustRMSCurrentMean = RMSCurrentMean + currentOffset2;                     /* square root of the average value including offset value */
+    FinalRMSCurrent = (((adjustRMSCurrentMean / 1024) * 5000) / mVperAmpValue); /* calculate the final RMS current*/
+    Courant = FinalRMSCurrent;
+    currentSampleSum = 0;   /* to reset accumulate sample values for the next cycle */
+    currentSampleCount = 0; /* to reset number of sample for the next cycle */
+  }
+}
 void setup()
 {
   // start serial and filesystem
-  pinMode(pin_moteur_relais1, OUTPUT);
+  pinMode(pin_moteur_On, OUTPUT);
 
-  digitalWrite(pin_moteur_relais1, LOW);
+  digitalWrite(pin_moteur_On, LOW);
+
+  pinMode(pin_moteur_Sens_rotation, OUTPUT);
+
+  digitalWrite(pin_moteur_Sens_rotation, HIGH);
 
   Serial.begin(SERIAL_BAUD_RATE);
 
@@ -227,18 +294,16 @@ void setup()
 
   // start the server
   server.begin();
-  Wire.begin(4,5); //Start I2C as master
+  Wire.begin(4, 5); //Start I2C as master
   setup_mpu_6050_registers();
 
   //ReadSavedDatas();
   delay(40);
   read_mpu_6050_data();
-  gravity = (double)acc_z;
-
-  pinMode(pin_detection, INPUT);
 
   t_debut_etat = millis();
-  etat_spray = 0;
+  etat_moteur = 0;
+  SetGravity();
 }
 
 void loop()
@@ -248,18 +313,15 @@ void loop()
   esp8266React.loop();
 
   read_mpu_6050_data();
-  float ratio = (double)acc_z / gravity;
-  ratio = constrain(ratio,-1,1);
-  angle_brut = acos(ratio) * 57.296;
-  Echantillonnageangle(); 
-  digitalWrite(pin_moteur_relais1,angle >=25); 
- if (abs(refresh_date - millis()) > 1000)
+  Echantillonnageangle();
+
+  if (abs(refresh_date - millis()) > 1000)
   {
     ReadSettings();
     if (Reset_counters == true)
     {
-      nb_total_passage = 0;
-      temps_total_spray = 0;
+      nb_total_demarrage = 0;
+      temps_total_brossage = 0;
       Reset_counters = false;
       UpdateSavedDatas();
     }
@@ -269,56 +331,58 @@ void loop()
   ///presence = digitalRead(pin_detection);
   duree_etat = (unsigned int)abs(millis() - loop_timer);
   UpdatePodoState();
-  // int val_etat = (int)etat;
-  // switch (val_etat)
-  // {
-  // case (int)Attente:
-  // {
-  //   if ((presence) && (duree_etat > MS_Arret))
-  //   {
-  //     etat = Attente_demarrage;
-  //     t_debut_etat = millis();
-  //   }
-  //   break;
-  // }
-  // case (int)Attente_demarrage:
-  // {
-  //   if (duree_etat > MS_RETARD_DEMARRAGE)
-  //   {
-  //     etat = Spraying;
-  //     SprayOn();
-  //   }
-  //   break;
-  // }
-  // case (int)Spraying:
-  // {
-  //   if (duree_etat > MS_SPRAY)
-  //   {
-  //     ajout_temps_spraying();
-  //     if (MS_RETARD_DEMARRAGE <= 0 && MS_Arret <= 0 && presence)
-  //     {
-  //       t_debut_etat = millis();
-  //     }
-  //     else
-  //     {
-  //       etat = Attente;
-  //       SprayOff();
-  //     }
-  //   }
+  int val_etat = (int)etat;
+  switch (val_etat)
+  {
+  case (int)Attente:
+  {
+    echantillonnagecourant();
+    if (angle >= AngleDeclenchement)
+    {
+      etat = Demarrage;
+      t_debut_etat = millis();
+    }
+    break;
+  case (int)Demarrage:
+    if (etat_moteur == 0)
+    {
+      MoteursOn();
+    }
+    if ((duree_etat) > MS_DEMARRAGE_MOTEUR)
+    {
+      etat = Brossage;
+    }
+    break;
+  case (int)Brossage:
+    echantillonnagecourant();
+    if (Courant > IMax || ((duree_etat > MS_BROSSAGE) && angle < AngleDeclenchement))
+    {
+      etat = (Courant > IMax) ? SurCourant : DelayAfterStop;
+      MoteursOff();
+      t_debut_etat = millis();
+      ajout_temps_brossage();
+    }
+    else if ((duree_etat > MS_BROSSAGE) && angle >= AngleDeclenchement)
+    {
+      ajout_temps_brossage();
+      t_debut_etat = millis();
+    }
+    break;
+  case (int)DelayAfterStop:
+    if (duree_etat > MS_ARRET)
+    {
+      etat = Attente;
+    }
+    break;
+  case (int)SurCourant:
+    if (duree_etat > MS_SurCourant)
+    {
+      etat = Attente;
+    }
+    break;
 
-  //   break;
-  // }
-  // case (int)Erreur:
-  // {
-  //   break;
-  // }
-  // case (int)Niveau_produit_bas:
-  // {
-  //   break;
-  // }
-  // default:
-  // {
-  //   break;
-  // }
-  // }
-}
+  default:
+
+    break;
+  }
+  }

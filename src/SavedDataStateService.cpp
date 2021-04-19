@@ -17,8 +17,9 @@ SavedDataStateService::SavedDataStateService(AsyncWebServer* server,
 }
 
 void SavedDataStateService::begin() {
-      _state.temps_total_spray = 1;
-      _state.nb_total_passage = 1;
+      _state.temps_total_brossage = 0;
+      _state.nb_total_demarrage = 0;
+      _state.nb_surcourant=0;
   _fsPersistence.readFromFS();
   onConfigUpdated();
 }
