@@ -3,9 +3,9 @@ export interface LightState {
   led_on: boolean;
 }
 export interface SavedDataState {
-  temps_total_spray : number;
-  nb_total_passage : number;
-
+  temps_total_brossage : number;
+  nb_total_demarrage : number;
+  nb_surcourant : number;
 }
 
 export interface SettingsDataState{
@@ -14,6 +14,8 @@ export interface SettingsDataState{
   MS_Surcourant : number;
   Date_RAZ : String;
   Reset_counters : boolean;
+  MS_DEMARRAGE_MOTEUR : number;
+  MS_ARRET : number;
 }
 
 export interface LightMqttSettings { 
@@ -22,9 +24,10 @@ export interface LightMqttSettings {
   mqtt_path : string;
 }
 
-export interface PodomaticState{
+export interface BrosseState{
   etat:string;
-  mesure_niveau:number;
-  presence:boolean;
+  mesure_angle:number;
+  mesureCourant : number;
+  shouldRAZ:boolean;
   duree_etat:number;
 }

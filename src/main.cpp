@@ -1,7 +1,7 @@
 #include <ESP8266React.h>
 #include <SavedDataStateService.h>
 #include <SettingsDataStateService.h>
-#include <PodomaticStateService.h>
+#include <BrosseStateService.h>
 #include <Wire.h>
 
 #define SERIAL_BAUD_RATE 115200
@@ -13,11 +13,10 @@ SavedDataStateService savedDataStateService = SavedDataStateService(&server, esp
 
 SettingsDataStateService settingsDataStateService =
     SettingsDataStateService(&server, esp8266React.getSecurityManager());
-PodomaticStateService podomaticStateService = PodomaticStateService(&server, esp8266React.getSecurityManager());
+BrosseStateService brosseStateService = BrosseStateService(&server, esp8266React.getSecurityManager());
 
-#pragma region Parametres de brossage
+//#pragma region Parametres de brossage
 float AngleDeclenchement;
-unsigned long nb_total_demarrage;
 unsigned long MS_BROSSAGE;
 unsigned int MS_SurCourant = 15000000;
 unsigned int MS_ARRET = 3000000;
@@ -26,15 +25,16 @@ float IMax;
 //#define MS_SURCOURANT 15000000 //en microseconde
 //#define MS_DEMARRAGE_MOTEUR 1500000 //en microseconde
 //#define MS_ARRET 3000000 //en microseconde
-#pragma endregion Parametres de brossage
+//#pragma endregion Parametres de brossage
 
-#pragma region Donnees sauvegardees
+//#pragma region Donnees sauvegardees
 double temps_total_brossage;
+unsigned long nb_total_demarrage;
 unsigned int nb_surcourant;
 String Date_RAZ;
 bool Reset_counters;
 unsigned long refresh_date;
-#pragma endregion
+//#pragma endregion
 
 //Declaring some global variables
 int gyro_x, gyro_y, gyro_z;
@@ -157,11 +157,11 @@ void UpdateSettings()
 }
 void UpdatePodoState()
 {
-  podomaticStateService.update(
-      [](PodomaticState &state) {
+  brosseStateService.update(
+      [](BrosseState &state) {
         state.etat = (String)stateStr[(int)etat];
-        state.mesure_niveau = angle;
-        state.presence = presence;
+        state.mesure_angle = angle;
+        state.mesureCourant=Courant;
         state.duree_etat = duree_etat;
         return StateUpdateResult::CHANGED;
       },
@@ -173,6 +173,11 @@ void MoteursOff()
   digitalWrite(pin_moteur_On, HIGH);
   etat_moteur = 0;
 }
+void InversionSensRotation()
+{
+  SensRotation = !SensRotation;
+  digitalWrite(pin_moteur_Sens_rotation, SensRotation);
+}
 void MoteursOn()
 {
   InversionSensRotation();
@@ -181,11 +186,7 @@ void MoteursOn()
   etat_moteur = 1;
   digitalWrite(pin_moteur_Sens_rotation, LOW);
 }
-void InversionSensRotation()
-{
-  SensRotation = !SensRotation;
-  digitalWrite(pin_moteur_Sens_rotation, SensRotation);
-}
+
 void ajout_temps_brossage()
 {
   temps_total_brossage += (double)(duree_etat) / (1000.0 * 3600.0);
@@ -288,7 +289,7 @@ void setup()
 
   settingsDataStateService.begin();
 
-  podomaticStateService.begin();
+  brosseStateService.begin();
 
   refresh_date = millis();
 
@@ -334,55 +335,53 @@ void loop()
   int val_etat = (int)etat;
   switch (val_etat)
   {
-  case (int)Attente:
-  {
-    echantillonnagecourant();
-    if (angle >= AngleDeclenchement)
-    {
-      etat = Demarrage;
-      t_debut_etat = millis();
-    }
-    break;
-  case (int)Demarrage:
-    if (etat_moteur == 0)
-    {
-      MoteursOn();
-    }
-    if ((duree_etat) > MS_DEMARRAGE_MOTEUR)
-    {
-      etat = Brossage;
-    }
-    break;
-  case (int)Brossage:
-    echantillonnagecourant();
-    if (Courant > IMax || ((duree_etat > MS_BROSSAGE) && angle < AngleDeclenchement))
-    {
-      etat = (Courant > IMax) ? SurCourant : DelayAfterStop;
-      MoteursOff();
-      t_debut_etat = millis();
-      ajout_temps_brossage();
-    }
-    else if ((duree_etat > MS_BROSSAGE) && angle >= AngleDeclenchement)
-    {
-      ajout_temps_brossage();
-      t_debut_etat = millis();
-    }
-    break;
-  case (int)DelayAfterStop:
-    if (duree_etat > MS_ARRET)
-    {
-      etat = Attente;
-    }
-    break;
-  case (int)SurCourant:
-    if (duree_etat > MS_SurCourant)
-    {
-      etat = Attente;
-    }
-    break;
+    case (int)Attente:
+      echantillonnagecourant();
+      if (angle >= AngleDeclenchement)
+      {
+        etat = Demarrage;
+        t_debut_etat = millis();
+      }
+      break;
+    case (int)Demarrage:
+      if (etat_moteur == 0)
+      {
+        MoteursOn();
+      }
+      if ((duree_etat) > MS_DEMARRAGE_MOTEUR)
+      {
+        etat = Brossage;
+      }
+      break;
+    case (int)Brossage:
+      echantillonnagecourant();
+      if (Courant > IMax || ((duree_etat > MS_BROSSAGE) && angle < AngleDeclenchement))
+      {
+        etat = (Courant > IMax) ? SurCourant : DelayAfterStop;
+        MoteursOff();
+        t_debut_etat = millis();
+        ajout_temps_brossage();
+      }
+      else if ((duree_etat > MS_BROSSAGE) && angle >= AngleDeclenchement)
+      {
+        ajout_temps_brossage();
+        t_debut_etat = millis();
+      }
+      break;
+    case (int)DelayAfterStop:
+      if (duree_etat > MS_ARRET)
+      {
+        etat = Attente;
+      }
+      break;
+    case (int)SurCourant:
+      if (duree_etat > MS_SurCourant)
+      {
+        etat = Attente;
+      }
+      break;
 
-  default:
-
-    break;
+    default:
+      break;
   }
   }

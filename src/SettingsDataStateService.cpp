@@ -19,6 +19,8 @@ void SettingsDataStateService::begin() {
   _state.Date_RAZ = (String)__DATE__;
   _state.MS_Surcourant = 30000;
   _state.Reset_counters = false;
+  _state.MS_DEMARRAGE_MOTEUR=15000;
+  _state.MS_ARRET=15000;
   _fsPersistence.readFromFS();
   onConfigUpdated();
 }

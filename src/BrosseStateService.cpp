@@ -1,15 +1,15 @@
-#include <PodomaticStateService.h>
+#include <BrosseStateService.h>
 
-PodomaticStateService::PodomaticStateService(AsyncWebServer* server, SecurityManager* securityManager) :
-    _httpEndpoint(PodomaticState::read,
-                  PodomaticState::update,
+BrosseStateService::BrosseStateService(AsyncWebServer* server, SecurityManager* securityManager) :
+    _httpEndpoint(BrosseState::read,
+                  BrosseState::update,
                   this,
                   server,
                   PODOMATIC_STATE_SETTINGS_ENDPOINT_PATH,
                   securityManager,
                   AuthenticationPredicates::IS_AUTHENTICATED),
-    _webSocket(PodomaticState::read,
-               PodomaticState::update,
+    _webSocket(BrosseState::read,
+               BrosseState::update,
                this,
                server,
                PODOMATIC_STATE_SETTINGS_SOCKET_PATH,
@@ -19,14 +19,16 @@ PodomaticStateService::PodomaticStateService(AsyncWebServer* server, SecurityMan
   addUpdateHandler([&](const String& originId) { onConfigUpdated(); }, false);
 }
 
-void PodomaticStateService::begin() {
+void BrosseStateService::begin() {
   _state.etat = "michel";
-  _state.mesure_niveau = 1;
-  _state.presence=0;
+  _state.mesure_angle = 1;
+  _state.shouldRAZ=0;
+  _state.mesureCourant=0;
   _state.duree_etat=0;
 
   onConfigUpdated();
 }
 
-void PodomaticStateService::onConfigUpdated() {
+void BrosseStateService::onConfigUpdated() {
+  
 }

@@ -54,10 +54,13 @@ function SavedDataStateRestControllerForm(props: SavedDataStateRestControllerFor
   return (
     
       <><Typography variant="subtitle2" gutterBottom>
-      Temps total de spray : <NumberFormat value={data.temps_total_spray} decimalSeparator=',' displayType={'text'} decimalScale={2} /> heures ou <NumberFormat value={data.temps_total_spray*60} decimalSeparator=',' displayType={'text'} decimalScale={2} /> minutes
+      Temps total de brossage : <NumberFormat value={data.temps_total_brossage} decimalSeparator=',' displayType={'text'} decimalScale={2} /> heures ou <NumberFormat value={data.temps_total_brossage*60} decimalSeparator=',' displayType={'text'} decimalScale={2} /> minutes
     </Typography>
       <Typography variant="subtitle2" gutterBottom>
-        Nombre total de passages: {data.nb_total_passage}
+        Nombre total de demarrages: {data.nb_total_demarrage}
+      </Typography>
+      <Typography variant="subtitle2" gutterBottom>
+        Nombre total d'arrêt en surcourant : {data.nb_surcourant}
       </Typography></>
 
   );

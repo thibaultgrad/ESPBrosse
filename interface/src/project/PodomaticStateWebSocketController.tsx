@@ -6,13 +6,13 @@ import { WEB_SOCKET_ROOT } from '../api';
 import { WebSocketControllerProps, WebSocketFormLoader, WebSocketFormProps, webSocketController } from '../components';
 import { SectionContent, BlockFormControlLabel } from '../components';
 
-import { PodomaticState } from './types';
+import { BrosseState } from './types';
 import NumberFormat from 'react-number-format';
 import { format } from 'path';
 
 export const LIGHT_SETTINGS_WEBSOCKET_URL = WEB_SOCKET_ROOT + "PodomaticState";
 
-type PodomaticStateWebSocketControllerProps = WebSocketControllerProps<PodomaticState>;
+type PodomaticStateWebSocketControllerProps = WebSocketControllerProps<BrosseState>;
 
 class PodomaticStateWebSocketController extends Component<PodomaticStateWebSocketControllerProps> {
 
@@ -33,7 +33,7 @@ class PodomaticStateWebSocketController extends Component<PodomaticStateWebSocke
 
 export default webSocketController(LIGHT_SETTINGS_WEBSOCKET_URL, 100, PodomaticStateWebSocketController);
 
-type PodomaticStateWebSocketControllerFormProps = WebSocketFormProps<PodomaticState>;
+type PodomaticStateWebSocketControllerFormProps = WebSocketFormProps<BrosseState>;
 
 function PodomaticStateWebSocketControllerForm(props: PodomaticStateWebSocketControllerFormProps) {
   const { data, saveData, setData } = props;
@@ -44,7 +44,7 @@ function PodomaticStateWebSocketControllerForm(props: PodomaticStateWebSocketCon
     Etat en cours : {data.etat} (<NumberFormat value={data.duree_etat} displayType={'text'} decimalSeparator=',' decimalScale={1} /> s)
     </Typography>
     <Typography variant="body1">
-    Angle mesuré : <NumberFormat value={data.mesure_niveau} displayType={'text'} decimalSeparator=',' decimalScale={1} /> °
+    Angle mesuré : <NumberFormat value={data.mesure_angle} displayType={'text'} decimalSeparator=',' decimalScale={1} /> °
     </Typography>
     <Typography variant="body1"> Cellule {data.presence ? "barrée":"ouverte"} <Checkbox checked={data.presence} readOnly/></Typography>
     <Typography variant="body1">

@@ -18,13 +18,17 @@ class SettingsDataState {
 	unsigned int Angl_declenchement;
 	unsigned int MS_Surcourant;
 	float Courant_max;
-    bool Reset_counters; 
-    String Date_RAZ;
+  bool Reset_counters; 
+  String Date_RAZ;
+  unsigned int MS_ARRET;
+  unsigned int MS_DEMARRAGE_MOTEUR;
 
   static void read(SettingsDataState& settings, JsonObject& root) {
     root["MS_Brossage"] = settings.MS_Brossage;
     root["Angl_declenchement"] = settings.Angl_declenchement;
     root["MS_Surcourant"] = settings.MS_Surcourant;
+    root["MS_ARRET"] = settings.MS_ARRET;
+    root["MS_DEMARRAGE_MOTEUR"] = settings.MS_DEMARRAGE_MOTEUR;
     root["Courant_max"] = settings.Courant_max;
     root["Reset_counters"] = settings.Reset_counters;
     root["Date_RAZ"]=settings.Date_RAZ;
@@ -37,16 +41,18 @@ class SettingsDataState {
     float newCourantMax = root.containsKey("Courant_max") ? root["Courant_max"]:1;
     bool newReset = root.containsKey("Reset_counters") ? root["Reset_counters"]:false;
     String newDateRaz=root.containsKey("Date_RAZ") ? root["Date_RAZ"]: String("no date");
-    if ( ((savedState.MS_Brossage) != newMBrossage) |((savedState.Angl_declenchement) != newMSRetard) |((savedState.MS_Surcourant) != newMSArret) |((savedState.Courant_max) != newCourantMax)|((savedState.Reset_counters) != newReset) ) {
+    //if ( ((savedState.MS_Brossage) != newMBrossage) |((savedState.Angl_declenchement) != newMSRetard) |((savedState.MS_Surcourant) != newMSArret) |((savedState.Courant_max) != newCourantMax)|((savedState.Reset_counters) != newReset) ) {
       savedState.MS_Brossage = newMBrossage;
       savedState.Angl_declenchement = newMSRetard;
       savedState.MS_Surcourant = newMSArret;
       savedState.Courant_max = newCourantMax;
       savedState.Reset_counters=newReset;
       savedState.Date_RAZ=root["Date_RAZ"].as<String>();
+      savedState.MS_ARRET=root["MS_ARRET"];
+      savedState.MS_DEMARRAGE_MOTEUR=root["MS_DEMARRAGE_MOTEUR"];
       return StateUpdateResult::CHANGED;
-    }
-    return StateUpdateResult::UNCHANGED;
+    //}
+    //return StateUpdateResult::UNCHANGED;
   }
 
 };

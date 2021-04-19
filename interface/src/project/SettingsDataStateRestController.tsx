@@ -56,6 +56,8 @@ function SettingsDataStateRestControllerForm(props: SettingsDataStateRestControl
       <TextField id="standard-basic" label="Durée d'arret apres surcourant (ms)" onChange={handleValueChange('MS_Surcourant')} value={data.MS_Surcourant} color="secondary" />
       <TextField id="standard-basic" label="Date de remise à zero" type="datetime-local" onChange={handleValueChange('Date_RAZ')} value={data.Date_RAZ} color="secondary" />
       <TextField id="standard-basic" label="Courant Max (A)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
+      <TextField id="standard-basic" label="Temps minimum d'arrêt (ms)" onChange={handleValueChange('MS_ARRET')} value={data.MS_ARRET} color="secondary" />
+      <TextField id="standard-basic" label="Tps d'arrêt apres surcourant (ms)" onChange={handleValueChange('MS_DEMARRAGE_MOTEUR')} value={data.MS_DEMARRAGE_MOTEUR} color="secondary" />
       <FormActions>
         <FormButton startIcon={<SaveIcon />} variant="contained" color="primary" type="submit">
           Save
