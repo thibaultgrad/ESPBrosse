@@ -18,14 +18,14 @@ public:
 double temps_total_brossage;
 unsigned int nb_surcourant;
 unsigned long nb_total_demarrage;
-bool Reset_counters;
+//bool Reset_counters;
 
   static void read(SavedDataState &settings, JsonObject &root)
   {
     root["temps_total_brossage"] = settings.temps_total_brossage;
     root["nb_total_demarrage"] = settings.nb_total_demarrage;
     root["nb_surcourant"] = settings.nb_surcourant;
-    root["Reset_counters"]=settings.Reset_counters;
+    //root["Reset_counters"]=settings.Reset_counters;
   }
 
   static StateUpdateResult update(JsonObject &root, SavedDataState &savedState)
@@ -33,7 +33,7 @@ bool Reset_counters;
     savedState.temps_total_brossage = (double)root["temps_total_brossage"];
     savedState.nb_total_demarrage = root["nb_total_demarrage"];
     savedState.nb_surcourant = root["nb_surcourant"];
-    savedState.Reset_counters=root["Reset_counters"];
+    //savedState.Reset_counters=root["Reset_counters"];
     return StateUpdateResult::CHANGED;
   }
 };

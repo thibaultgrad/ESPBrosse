@@ -43,10 +43,6 @@ function SettingsDataStateRestControllerForm(props: SettingsDataStateRestControl
   const { data, saveData, handleValueChange } = props;
   return (
     <ValidatorForm onSubmit={saveData}>
-      <FormControlLabel
-        control={<Switch checked={data.Reset_counters} onChange={handleValueChange('Reset_counters')} name="checkedA" />}
-        label="Remise à zero compteurs (à remettre à zero)"
-      />
       <Box bgcolor="primary.main" color="primary.contrastText" p={2} mt={2} mb={2}>
         <Typography variant="body1">
         Reglage des parametres :

@@ -20,7 +20,7 @@ void SavedDataStateService::begin() {
       _state.temps_total_brossage = 0;
       _state.nb_total_demarrage = 0;
       _state.nb_surcourant=0;
-      _state.Reset_counters=0;
+      //_state.Reset_counters=0;
   _fsPersistence.readFromFS();
   onConfigUpdated();
 }
