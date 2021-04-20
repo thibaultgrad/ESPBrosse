@@ -54,6 +54,7 @@ function SettingsDataStateRestControllerForm(props: SettingsDataStateRestControl
       <TextField id="standard-basic" label="Courant Max (A)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
       <TextField id="standard-basic" label="Temps minimum d'arrêt (ms)" onChange={handleValueChange('MS_ARRET')} value={data.MS_ARRET} color="secondary" />
       <TextField id="standard-basic" label="Tps d'arrêt apres surcourant (ms)" onChange={handleValueChange('MS_DEMARRAGE_MOTEUR')} value={data.MS_DEMARRAGE_MOTEUR} color="secondary" />
+      <TextField id="standard-basic" label="Angle déclenchement (°)" onChange={handleValueChange('Angl_declenchement')} value={data.Angl_declenchement} color="secondary" />
       <FormActions>
         <FormButton startIcon={<SaveIcon />} variant="contained" color="primary" type="submit">
           Save

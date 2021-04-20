@@ -21,6 +21,7 @@ void SettingsDataStateService::begin() {
   _state.Reset_counters = false;
   _state.MS_DEMARRAGE_MOTEUR=15000;
   _state.MS_ARRET=15000;
+  _state.Angl_declenchement=20;
   _fsPersistence.readFromFS();
   onConfigUpdated();
 }

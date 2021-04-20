@@ -130,6 +130,7 @@ void ReadSettings()
     IMax = _state.Courant_max;
     Date_RAZ = _state.Date_RAZ;
     Reset_counters = _state.Reset_counters;
+    AngleDeclenchement=_state.Angl_declenchement;
   });
 }
 
@@ -192,7 +193,7 @@ void MoteursOn()
   nb_total_demarrage++;
   t_debut_etat = millis();
   etat_moteur = 1;
-  digitalWrite(pin_moteur_Sens_rotation, LOW);
+  digitalWrite(pin_moteur_On, LOW);
 }
 
 void ajout_temps_brossage()

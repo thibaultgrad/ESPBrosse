@@ -13,6 +13,7 @@ export interface SettingsDataState{
   Courant_max : number;
   MS_Surcourant : number;
   Date_RAZ : String;
+  Angl_declenchement : number;
   //Reset_counters : boolean;
   MS_DEMARRAGE_MOTEUR : number;
   MS_ARRET : number;
