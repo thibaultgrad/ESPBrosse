@@ -3,6 +3,7 @@
 #include <SettingsDataStateService.h>
 #include <BrosseStateService.h>
 #include <Wire.h>
+//#include <MPU6050.h>
 
 #define SERIAL_BAUD_RATE 115200
 
@@ -32,7 +33,7 @@ double temps_total_brossage;
 unsigned long nb_total_demarrage;
 unsigned int nb_surcourant;
 String Date_RAZ;
-bool Reset_counters;
+bool Reset_counters=false;
 unsigned long refresh_date;
 //#pragma endregion
 
@@ -155,6 +156,12 @@ void UpdateSettings()
       },
       "Jean");
 }
+void ReadPodoState()
+{
+  brosseStateService.read([](BrosseState _state) {
+    Reset_counters = _state.shouldRAZ;
+  });
+}
 void UpdatePodoState()
 {
   brosseStateService.update(
@@ -163,6 +170,7 @@ void UpdatePodoState()
         state.mesure_angle = angle;
         state.mesureCourant=Courant;
         state.duree_etat = duree_etat;
+        state.shouldRAZ=Reset_counters;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
@@ -247,7 +255,7 @@ void Echantillonnageangle()
     indexechantilon = 0;
   }
 }
-void echantillonnagecourant()
+void MesureCourant()
 {
 
   offsetSampleRead = analogRead(pinCourant) - 512;                   /* Read analog value. This is for offset purpose */
@@ -305,6 +313,9 @@ void setup()
   t_debut_etat = millis();
   etat_moteur = 0;
   SetGravity();
+
+  ReadSavedDatas();
+  ReadSettings();
 }
 
 void loop()
@@ -319,6 +330,7 @@ void loop()
   if (abs(refresh_date - millis()) > 1000)
   {
     ReadSettings();
+    ReadPodoState();
     if (Reset_counters == true)
     {
       nb_total_demarrage = 0;
@@ -336,7 +348,7 @@ void loop()
   switch (val_etat)
   {
     case (int)Attente:
-      echantillonnagecourant();
+      MesureCourant();
       if (angle >= AngleDeclenchement)
       {
         etat = Demarrage;
@@ -354,7 +366,7 @@ void loop()
       }
       break;
     case (int)Brossage:
-      echantillonnagecourant();
+      MesureCourant();
       if (Courant > IMax || ((duree_etat > MS_BROSSAGE) && angle < AngleDeclenchement))
       {
         etat = (Courant > IMax) ? SurCourant : DelayAfterStop;
