@@ -25,7 +25,7 @@ export interface LightMqttSettings {
   mqtt_path : string;
 }
 
-export interface PodomaticState{
+export interface BrosseState{
   etat:string;
   angle:number;
   ResetJournal:boolean;
