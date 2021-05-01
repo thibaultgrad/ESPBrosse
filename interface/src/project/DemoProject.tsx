@@ -10,7 +10,7 @@ import { AuthenticatedRoute } from '../authentication';
 import DemoInformation from './DemoInformation';
 import SavedDataStateRestController from './SavedDataStateRestController';
 import SettingsDataStateRestController from './SettingsDataStateRestController';
-import PodomaticStateWebSocketController from './PodomaticStateWebSocketController';
+import BrosseStateWebSocketController from './BrosseStateWebSocketController';
 
 class RestComponent extends Component {
 
@@ -20,7 +20,7 @@ class RestComponent extends Component {
       <React.Fragment>
         <SavedDataStateRestController {...this.props}/>
         <SettingsDataStateRestController {...this.props}/>
-        <PodomaticStateWebSocketController {...this.props}/>
+        <BrosseStateWebSocketController {...this.props}/>
         </React.Fragment>
     )
   }
