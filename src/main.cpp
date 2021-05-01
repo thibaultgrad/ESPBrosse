@@ -1,7 +1,7 @@
 #include <ESP8266React.h>
 #include <SavedDataStateService.h>
 #include <SettingsDataStateService.h>
-#include <PodomaticStateService.h>
+#include <BrosseStateService.h>
 #include <Wire.h>
 
 #define SERIAL_BAUD_RATE 115200
@@ -13,7 +13,7 @@ SavedDataStateService savedDataStateService = SavedDataStateService(&server, esp
 
 SettingsDataStateService settingsDataStateService =
     SettingsDataStateService(&server, esp8266React.getSecurityManager());
-PodomaticStateService podomaticStateService = PodomaticStateService(&server, esp8266React.getSecurityManager());
+BrosseStateService brosseStateService = BrosseStateService(&server, esp8266React.getSecurityManager());
 
 //#pragma region Parametres de brossage
 float AngleDeclenchement;
@@ -161,8 +161,8 @@ void UpdateSettings()
 }
 void UpdatePodoState()
 {
-  podomaticStateService.update(
-      [](PodomaticState &state) {
+  brosseStateService.update(
+      [](BrosseState &state) {
         state.etat = (String)stateStr[(int)etat];
         state.angle = angle;
         state.ResetJournal = Reset_counters;
@@ -175,7 +175,7 @@ void UpdatePodoState()
 }
 void ReadPodoState()
 {
-  podomaticStateService.read([](PodomaticState _state) {
+  brosseStateService.read([](BrosseState _state) {
     Reset_counters = _state.ResetJournal;
     ResetGravity=_state.ResetGravity;
   });
@@ -301,7 +301,7 @@ void setup()
 
   settingsDataStateService.begin();
 
-  podomaticStateService.begin();
+  brosseStateService.begin();
 
   refresh_date = millis();
 
