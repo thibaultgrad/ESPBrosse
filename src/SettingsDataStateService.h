@@ -15,38 +15,46 @@
 class SettingsDataState {
  public:
 	unsigned long MS_Brossage;
-	unsigned int Angl_declenchement;
+	unsigned int Angle_declenchement;
 	unsigned int MS_Surcourant;
+  unsigned int MS_DEMARRAGE_MOTEUR;
+  unsigned int MS_ARRET;
 	float Courant_max;
     bool Reset_counters; 
     String Date_RAZ;
 
   static void read(SettingsDataState& settings, JsonObject& root) {
     root["MS_Brossage"] = settings.MS_Brossage;
-    root["Angl_declenchement"] = settings.Angl_declenchement;
+    root["Angle_declenchement"] = settings.Angle_declenchement;
     root["MS_Surcourant"] = settings.MS_Surcourant;
     root["Courant_max"] = settings.Courant_max;
     root["Reset_counters"] = settings.Reset_counters;
     root["Date_RAZ"]=settings.Date_RAZ;
+    root["MS_DEMARRAGE_MOTEUR"]=settings.MS_DEMARRAGE_MOTEUR;
+    root["MS_ARRET"]=settings.MS_ARRET;
   }
 
   static StateUpdateResult update(JsonObject& root, SettingsDataState& savedState) {
     unsigned long newMBrossage = root.containsKey("MS_Brossage") ? root["MS_Brossage"]:1;
-    unsigned int newMSRetard = root.containsKey("Angl_declenchement") ? root["Angl_declenchement"]:1;   
+    unsigned int newMSRetard = root.containsKey("Angle_declenchement") ? root["Angle_declenchement"]:1;   
     unsigned int newMSArret = root.containsKey("MS_Surcourant") ? root["MS_Surcourant"]:1;
+    unsigned int newMSDem = root.containsKey("MS_DEMARRAGE_MOTEUR") ? root["MS_DEMARRAGE_MOTEUR"]:1;
+    unsigned int newMSArr = root.containsKey("MS_ARRET") ? root["MS_ARRET"]:1;
     float newCourantMax = root.containsKey("Courant_max") ? root["Courant_max"]:1;
     bool newReset = root.containsKey("Reset_counters") ? root["Reset_counters"]:false;
     String newDateRaz=root.containsKey("Date_RAZ") ? root["Date_RAZ"]: String("no date");
-    if ( ((savedState.MS_Brossage) != newMBrossage) |((savedState.Angl_declenchement) != newMSRetard) |((savedState.MS_Surcourant) != newMSArret) |((savedState.Courant_max) != newCourantMax)|((savedState.Reset_counters) != newReset) ) {
+    //if ( ((savedState.MS_Brossage) != newMBrossage) |((savedState.Angle_declenchement) != newMSRetard) |((savedState.MS_Surcourant) != newMSArret) |((savedState.Courant_max) != newCourantMax)|((savedState.Reset_counters) != newReset) ) {
       savedState.MS_Brossage = newMBrossage;
-      savedState.Angl_declenchement = newMSRetard;
+      savedState.Angle_declenchement = newMSRetard;
       savedState.MS_Surcourant = newMSArret;
       savedState.Courant_max = newCourantMax;
       savedState.Reset_counters=newReset;
       savedState.Date_RAZ=root["Date_RAZ"].as<String>();
+      savedState.MS_DEMARRAGE_MOTEUR=newMSDem;
+      savedState.MS_ARRET=newMSArr;
       return StateUpdateResult::CHANGED;
-    }
-    return StateUpdateResult::UNCHANGED;
+    //}
+    //return StateUpdateResult::UNCHANGED;
   }
 
 };

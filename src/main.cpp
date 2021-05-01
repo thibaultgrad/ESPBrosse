@@ -15,7 +15,7 @@ SettingsDataStateService settingsDataStateService =
     SettingsDataStateService(&server, esp8266React.getSecurityManager());
 PodomaticStateService podomaticStateService = PodomaticStateService(&server, esp8266React.getSecurityManager());
 
-#pragma region Parametres de brossage
+//#pragma region Parametres de brossage
 float AngleDeclenchement;
 unsigned long nb_total_demarrage;
 unsigned long MS_BROSSAGE;
@@ -26,15 +26,16 @@ float IMax;
 //#define MS_SURCOURANT 15000000 //en microseconde
 //#define MS_DEMARRAGE_MOTEUR 1500000 //en microseconde
 //#define MS_ARRET 3000000 //en microseconde
-#pragma endregion Parametres de brossage
+//#pragma endregion Parametres de brossage
 
-#pragma region Donnees sauvegardees
+//#pragma region Donnees sauvegardees
 double temps_total_brossage;
 unsigned int nb_surcourant;
 String Date_RAZ;
 bool Reset_counters;
+bool ResetGravity;
 unsigned long refresh_date;
-#pragma endregion
+//#pragma endregion
 
 //Declaring some global variables
 int gyro_x, gyro_y, gyro_z;
@@ -73,7 +74,7 @@ Etats etat = Attente;
 //int nb_spray_non_enregistre;
 //#define nb_spray_avt_refresh 10
 
-const char *stateStr[] = {"Attente", "Brossage", "Demarrage", "SurCourant", "Attente apres arrêt"};
+const char *stateStr[] = {"Attente",  "Demarrage", "Brossage", "SurCourant", "Attente apres arrêt"};
 
 double gravity;
 double angle;
@@ -126,9 +127,12 @@ void ReadSettings()
   settingsDataStateService.read([](SettingsDataState _state) {
     MS_BROSSAGE = _state.MS_Brossage;
     MS_SurCourant = _state.MS_Surcourant;
+    MS_DEMARRAGE_MOTEUR = _state.MS_DEMARRAGE_MOTEUR;
     IMax = _state.Courant_max;
     Date_RAZ = _state.Date_RAZ;
     Reset_counters = _state.Reset_counters;
+    AngleDeclenchement=_state.Angle_declenchement;
+    MS_ARRET=_state.MS_ARRET;
   });
 }
 
@@ -150,7 +154,7 @@ void UpdateSettings()
         state.MS_Surcourant = MS_SurCourant;
         state.Courant_max = IMax;
         state.Date_RAZ = Date_RAZ;
-        state.Reset_counters = Reset_counters;
+        state.Reset_counters = false;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
@@ -160,18 +164,32 @@ void UpdatePodoState()
   podomaticStateService.update(
       [](PodomaticState &state) {
         state.etat = (String)stateStr[(int)etat];
-        state.mesure_niveau = angle;
-        state.presence = presence;
-        state.duree_etat = duree_etat;
+        state.angle = angle;
+        state.ResetJournal = Reset_counters;
+        state.duree_etat = duree_etat/1000.0f;
+        state.ResetGravity=false;
+        state.courant=Courant;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
 }
+void ReadPodoState()
+{
+  podomaticStateService.read([](PodomaticState _state) {
+    Reset_counters = _state.ResetJournal;
+    ResetGravity=_state.ResetGravity;
+  });
+}
 void MoteursOff()
 {
   t_debut_etat = millis();
-  digitalWrite(pin_moteur_On, HIGH);
+  digitalWrite(pin_moteur_On, LOW);
   etat_moteur = 0;
+}
+void InversionSensRotation()
+{
+  SensRotation = !SensRotation;
+  digitalWrite(pin_moteur_Sens_rotation, SensRotation);
 }
 void MoteursOn()
 {
@@ -179,12 +197,7 @@ void MoteursOn()
   nb_total_demarrage++;
   t_debut_etat = millis();
   etat_moteur = 1;
-  digitalWrite(pin_moteur_Sens_rotation, LOW);
-}
-void InversionSensRotation()
-{
-  SensRotation = !SensRotation;
-  digitalWrite(pin_moteur_Sens_rotation, SensRotation);
+  digitalWrite(pin_moteur_On, HIGH);
 }
 void ajout_temps_brossage()
 {
@@ -318,24 +331,25 @@ void loop()
   if (abs(refresh_date - millis()) > 1000)
   {
     ReadSettings();
-    if (Reset_counters == true)
+    refresh_date = millis();
+  }
+
+  ///presence = digitalRead(pin_detection);
+  duree_etat = (unsigned int)abs(millis() - t_debut_etat);
+  ReadPodoState();
+    if (Reset_counters)
     {
       nb_total_demarrage = 0;
       temps_total_brossage = 0;
       Reset_counters = false;
       UpdateSavedDatas();
     }
-    refresh_date = millis();
-  }
-
-  ///presence = digitalRead(pin_detection);
-  duree_etat = (unsigned int)abs(millis() - loop_timer);
+    if (ResetGravity) SetGravity();
   UpdatePodoState();
   int val_etat = (int)etat;
   switch (val_etat)
   {
   case (int)Attente:
-  {
     echantillonnagecourant();
     if (angle >= AngleDeclenchement)
     {
@@ -385,4 +399,4 @@ void loop()
 
     break;
   }
-  }
+}
