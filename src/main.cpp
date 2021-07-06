@@ -62,13 +62,13 @@ bool SensRotation = true;
 
 unsigned long loop_timer = 0UL;
 
-long t_debut_etat;
+unsigned long t_debut_etat;
 unsigned int duree_etat;
 bool presence = false;
 Etats etat = Attente;
 
 #define pin_moteur_On 14
-#define pin_moteur_Sens_rotation 0
+#define pin_moteur_Sens_rotation 12
 #define pinCourant A0
 
 //int nb_spray_non_enregistre;
@@ -328,14 +328,14 @@ void loop()
   read_mpu_6050_data();
   Echantillonnageangle();
 
-  if (abs(refresh_date - millis()) > 1000)
+  if (abs((long)(refresh_date - millis())) > 1000)
   {
     ReadSettings();
     refresh_date = millis();
   }
 
   ///presence = digitalRead(pin_detection);
-  duree_etat = (unsigned int)abs(millis() - t_debut_etat);
+  duree_etat = (unsigned int)abs((long)(millis() - t_debut_etat));
   ReadPodoState();
     if (Reset_counters)
     {
