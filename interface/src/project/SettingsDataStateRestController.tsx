@@ -22,7 +22,7 @@ class SettingsDataStateRestController extends Component<SettingsDataStateRestCon
 
   render() {
     return (
-      <SectionContent title='Reglages podomatic' titleGutter>
+      <SectionContent title='Reglages Brosse' titleGutter>
         <RestFormLoader
           {...this.props}
           render={props => (

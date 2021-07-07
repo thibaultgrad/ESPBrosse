@@ -37,9 +37,9 @@ class DemoProject extends Component<RouteComponentProps> {
   render() {
 
     return (
-      <MenuAppBar sectionTitle="Gestion Podomatic">
+      <MenuAppBar sectionTitle="Gestion Brosse">
         <Tabs value={this.props.match.url} onChange={this.handleTabChange} variant="fullWidth">
-          <Tab value={`/${PROJECT_PATH}/demo/rest`} label="Podomatic" />
+          <Tab value={`/${PROJECT_PATH}/demo/rest`} label="Brosse" />
           <Tab value={`/${PROJECT_PATH}/demo/information`} label="Information" />
         </Tabs>
         <Switch>

@@ -25,7 +25,7 @@ class SavedDataStateRestController extends Component<SavedDataStateRestControlle
 
   render() {
     return (
-      <SectionContent title='Historique podomatic' titleGutter >
+      <SectionContent title='Historique Brosse' titleGutter >
         <RestFormLoader
           {...this.props}
           render={props => (
