@@ -3,6 +3,8 @@
 #include <SettingsDataStateService.h>
 #include <BrosseStateService.h>
 #include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
 
 #define SERIAL_BAUD_RATE 115200
 
@@ -42,7 +44,7 @@ int gyro_x, gyro_y, gyro_z;
 
 boolean set_gyro_angles;
 
-long acc_x, acc_y, acc_z;
+double acc_x, acc_y, acc_z;
 
 //long loop_timer;
 
@@ -113,6 +115,9 @@ float currentOffset1 = 0; // to Offset deviation and accuracy. Offset any fake c
 float currentOffset2 = 0; // to offset value due to calculation error from squared and square root.
 
 float Courant = 0;
+
+//Objects
+Adafruit_MPU6050 mpu;
 
 void ReadSavedDatas()
 {
@@ -206,21 +211,18 @@ void ajout_temps_brossage()
 }
 void setup_mpu_6050_registers()
 {
-  //Activate the MPU-6050
-  Wire.beginTransmission(0x68); //Start communicating with the MPU-6050
-  Wire.write(0x6B);             //Send the requested starting register
-  Wire.write(0x00);             //Set the requested starting register
-  Wire.endTransmission();
-  //Configure the accelerometer (+/-8g)
-  Wire.beginTransmission(0x68); //Start communicating with the MPU-6050
-  Wire.write(0x1C);             //Send the requested starting register
-  Wire.write(0x10);             //Set the requested starting register
-  Wire.endTransmission();
-  //Configure the gyro (500dps full scale)
-  Wire.beginTransmission(0x68); //Start communicating with the MPU-6050
-  Wire.write(0x1B);             //Send the requested starting register
-  Wire.write(0x08);             //Set the requested starting register
-  Wire.endTransmission();
+  //Init Serial USB
+  Serial.println(F("Initialize System"));
+ if (!mpu.begin(0x68)) { // Change address if needed
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
+  }
+
+  mpu.setAccelerometerRange(MPU6050_RANGE_16_G);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 }
 void SetGravity()
 {
@@ -228,24 +230,39 @@ void SetGravity()
 }
 void read_mpu_6050_data()
 {                               //Subroutine for reading the raw gyro and accelerometer data
-  Wire.beginTransmission(0x68); //Start communicating with the MPU-6050
-  Wire.write(0x3B);             //Send the requested starting register
-  Wire.endTransmission();       //End the transmission
-  Wire.requestFrom(0x68, 14);   //Request 14 bytes from the MPU-6050
-  while (Wire.available() < 14)
-    ; //Wait until all the bytes are received
-  acc_x = Wire.read() << 8 | Wire.read();
-  acc_y = Wire.read() << 8 | Wire.read();
-  acc_z = Wire.read() << 8 | Wire.read();
-  temp = Wire.read() << 8 | Wire.read();
-  gyro_x = Wire.read() << 8 | Wire.read();
-  gyro_y = Wire.read() << 8 | Wire.read();
-  gyro_z = Wire.read() << 8 | Wire.read();
+  ////Read acceleromter data
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  acc_z = a.acceleration.z;
+  Serial.print("Acceleration Z: ");
+  Serial.print(a.acceleration.z);
+  /* Print out the values 
+  Serial.print("Acceleration X: ");
+  Serial.print(a.acceleration.x);
+  Serial.print(", Y: ");
+  Serial.print(a.acceleration.y);
+  Serial.print(", Z: ");
+  Serial.print(a.acceleration.z);
+  Serial.println(" m/s^2");
+
+  Serial.print("Rotation X: ");
+  Serial.print(g.gyro.x);
+  Serial.print(", Y: ");
+  Serial.print(g.gyro.y);
+  Serial.print(", Z: ");
+  Serial.print(g.gyro.z);
+  Serial.println(" rad/s");
+
+  Serial.print("Temperature: ");
+  Serial.print(temp.temperature);
+  Serial.println("°C");*/
 }
 void Echantillonnageangle()
 {
-  float ratio = (double)acc_z / gravity;
+  float ratio = acc_z / gravity;
   ratio = constrain(ratio, -1, 1);
+  Serial.print("  Ratio : ");
+  Serial.print(ratio);
   angle_brut = acos(ratio) * 57.296;
   echantillon_angle[indexechantilon] = angle_brut;
   for (i = 0; i < TAILLE_TABLEAU_ECHANTILLONS; i++)
@@ -347,6 +364,10 @@ void loop()
     if (ResetGravity) SetGravity();
   UpdatePodoState();
   int val_etat = (int)etat;
+  
+  Serial.print("  Angle : ");
+  Serial.println(angle_brut);
+
   switch (val_etat)
   {
   case (int)Attente:
