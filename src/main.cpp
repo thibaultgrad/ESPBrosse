@@ -17,7 +17,7 @@ SettingsDataStateService settingsDataStateService =
     SettingsDataStateService(&server, esp8266React.getSecurityManager());
 BrosseStateService brosseStateService = BrosseStateService(&server, esp8266React.getSecurityManager());
 
-//#pragma region Parametres de brossage
+// #pragma region Parametres de brossage
 float AngleDeclenchement;
 unsigned long nb_total_demarrage;
 unsigned long MS_BROSSAGE;
@@ -25,28 +25,28 @@ unsigned int MS_SurCourant = 15000000;
 unsigned int MS_ARRET = 3000000;
 unsigned int MS_DEMARRAGE_MOTEUR = 1500000;
 float IMax;
-//#define MS_SURCOURANT 15000000 //en microseconde
-//#define MS_DEMARRAGE_MOTEUR 1500000 //en microseconde
-//#define MS_ARRET 3000000 //en microseconde
-//#pragma endregion Parametres de brossage
+// #define MS_SURCOURANT 15000000 //en microseconde
+// #define MS_DEMARRAGE_MOTEUR 1500000 //en microseconde
+// #define MS_ARRET 3000000 //en microseconde
+// #pragma endregion Parametres de brossage
 
-//#pragma region Donnees sauvegardees
+// #pragma region Donnees sauvegardees
 double temps_total_brossage;
 unsigned int nb_surcourant;
 String Date_RAZ;
 bool Reset_counters;
 bool ResetGravity;
 unsigned long refresh_date;
-//#pragma endregion
+// #pragma endregion
 
-//Declaring some global variables
+// Declaring some global variables
 int gyro_x, gyro_y, gyro_z;
 
 boolean set_gyro_angles;
 
 double acc_x, acc_y, acc_z;
 
-//long loop_timer;
+// long loop_timer;
 
 int temp;
 
@@ -73,10 +73,10 @@ Etats etat = Attente;
 #define pin_moteur_Sens_rotation 12
 #define pinCourant A0
 
-//int nb_spray_non_enregistre;
-//#define nb_spray_avt_refresh 10
+// int nb_spray_non_enregistre;
+// #define nb_spray_avt_refresh 10
 
-const char *stateStr[] = {"Attente",  "Demarrage", "Brossage", "SurCourant", "Attente apres arrêt"};
+const char *stateStr[] = {"Attente", "Demarrage", "Brossage", "SurCourant", "Attente apres arrêt"};
 
 double gravity;
 double angle;
@@ -116,20 +116,21 @@ float currentOffset2 = 0; // to offset value due to calculation error from squar
 
 float Courant = 0;
 
-//Objects
+// Objects
 Adafruit_MPU6050 mpu;
 
 void ReadSavedDatas()
 {
-  savedDataStateService.read([](SavedDataState _state) {
+  savedDataStateService.read([](SavedDataState _state)
+                             {
     temps_total_brossage = _state.temps_total_brossage;
     nb_total_demarrage = _state.nb_total_demarrage;
-    nb_surcourant = _state.nb_surcourant;
-  });
+    nb_surcourant = _state.nb_surcourant; });
 }
 void ReadSettings()
 {
-  settingsDataStateService.read([](SettingsDataState _state) {
+  settingsDataStateService.read([](SettingsDataState _state)
+                                {
     MS_BROSSAGE = _state.MS_Brossage;
     MS_SurCourant = _state.MS_Surcourant;
     MS_DEMARRAGE_MOTEUR = _state.MS_DEMARRAGE_MOTEUR;
@@ -137,14 +138,14 @@ void ReadSettings()
     Date_RAZ = _state.Date_RAZ;
     Reset_counters = _state.Reset_counters;
     AngleDeclenchement=_state.Angle_declenchement;
-    MS_ARRET=_state.MS_ARRET;
-  });
+    MS_ARRET=_state.MS_ARRET; });
 }
 
 void UpdateSavedDatas()
 {
   savedDataStateService.update(
-      [](SavedDataState &state) {
+      [](SavedDataState &state)
+      {
         state.temps_total_brossage = temps_total_brossage;
         state.nb_total_demarrage = nb_total_demarrage;
         return StateUpdateResult::CHANGED;
@@ -154,7 +155,8 @@ void UpdateSavedDatas()
 void UpdateSettings()
 {
   settingsDataStateService.update(
-      [](SettingsDataState &state) {
+      [](SettingsDataState &state)
+      {
         state.MS_Brossage = MS_BROSSAGE;
         state.MS_Surcourant = MS_SurCourant;
         state.Courant_max = IMax;
@@ -167,23 +169,24 @@ void UpdateSettings()
 void UpdatePodoState()
 {
   brosseStateService.update(
-      [](BrosseState &state) {
+      [](BrosseState &state)
+      {
         state.etat = (String)stateStr[(int)etat];
         state.angle = angle;
         state.ResetJournal = Reset_counters;
-        state.duree_etat = duree_etat/1000.0f;
-        state.ResetGravity=false;
-        state.courant=Courant;
+        state.duree_etat = duree_etat / 1000.0f;
+        state.ResetGravity = false;
+        state.courant = Courant;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
 }
 void ReadPodoState()
 {
-  brosseStateService.read([](BrosseState _state) {
+  brosseStateService.read([](BrosseState _state)
+                          {
     Reset_counters = _state.ResetJournal;
-    ResetGravity=_state.ResetGravity;
-  });
+    ResetGravity=_state.ResetGravity; });
 }
 void MoteursOff()
 {
@@ -195,6 +198,7 @@ void InversionSensRotation()
 {
   SensRotation = !SensRotation;
   digitalWrite(pin_moteur_Sens_rotation, SensRotation);
+  delay(10);
 }
 void MoteursOn()
 {
@@ -203,6 +207,8 @@ void MoteursOn()
   t_debut_etat = millis();
   etat_moteur = 1;
   digitalWrite(pin_moteur_On, HIGH);
+  //Serial.print("Nb demarrage : ");
+  //Serial.println(nb_total_demarrage);
 }
 void ajout_temps_brossage()
 {
@@ -211,16 +217,18 @@ void ajout_temps_brossage()
 }
 void setup_mpu_6050_registers()
 {
-  //Init Serial USB
-  Serial.println(F("Initialize System"));
- if (!mpu.begin(0x68)) { // Change address if needed
-    Serial.println("Failed to find MPU6050 chip");
-    while (1) {
+  // Init Serial USB
+  //Serial.println(F("Initialize System"));
+  if (!mpu.begin(0x68))
+  { // Change address if needed
+    //Serial.println("Failed to find MPU6050 chip");
+    while (1)
+    {
       delay(10);
     }
   }
 
-  mpu.setAccelerometerRange(MPU6050_RANGE_16_G);
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 }
@@ -229,14 +237,14 @@ void SetGravity()
   gravity = (double)acc_z;
 }
 void read_mpu_6050_data()
-{                               //Subroutine for reading the raw gyro and accelerometer data
+{ // Subroutine for reading the raw gyro and accelerometer data
   ////Read acceleromter data
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
   acc_z = a.acceleration.z;
-  Serial.print("Acceleration Z: ");
-  Serial.print(a.acceleration.z);
-  /* Print out the values 
+  // Serial.print("Acceleration Z: ");
+  // Serial.print(a.acceleration.z);
+  /* Print out the values
   Serial.print("Acceleration X: ");
   Serial.print(a.acceleration.x);
   Serial.print(", Y: ");
@@ -261,8 +269,8 @@ void Echantillonnageangle()
 {
   float ratio = acc_z / gravity;
   ratio = constrain(ratio, -1, 1);
-  Serial.print("  Ratio : ");
-  Serial.print(ratio);
+  // Serial.print("  Ratio : ");
+  // Serial.print(ratio);
   angle_brut = acos(ratio) * 57.296;
   echantillon_angle[indexechantilon] = angle_brut;
   for (i = 0; i < TAILLE_TABLEAU_ECHANTILLONS; i++)
@@ -284,7 +292,7 @@ void echantillonnagecourant()
   currentSampleSum = currentSampleSum + sq(currentSampleRead);       /* accumulate total analog values for each sample readings*/
 
   currentSampleCount += 1;
-  //tension += 0.01;/* to count and move on to the next following count */
+  // tension += 0.01;/* to count and move on to the next following count */
   /* to reset the time again so that next cycle can start again*/
 
   if (currentSampleCount >= 50) /* after 1000 count or 1000 milli seconds (1 second), do this following codes*/
@@ -309,12 +317,14 @@ void setup()
 
   digitalWrite(pin_moteur_Sens_rotation, HIGH);
 
-  Serial.begin(SERIAL_BAUD_RATE);
+  //Serial.begin(SERIAL_BAUD_RATE);
 
   // start the framework and demo project
   esp8266React.begin();
 
   savedDataStateService.begin();
+
+  ReadSavedDatas();
 
   settingsDataStateService.begin();
 
@@ -324,10 +334,10 @@ void setup()
 
   // start the server
   server.begin();
-  Wire.begin(4, 5); //Start I2C as master
+  // Wire.begin(4, 5); //Start I2C as master
   setup_mpu_6050_registers();
 
-  //ReadSavedDatas();
+  // ReadSavedDatas();
   delay(40);
   read_mpu_6050_data();
 
@@ -351,22 +361,28 @@ void loop()
     refresh_date = millis();
   }
 
-  ///presence = digitalRead(pin_detection);
-  duree_etat = (unsigned int)abs((long)(millis() - t_debut_etat));
+  /// presence = digitalRead(pin_detection);
+  duree_etat = (unsigned int)(long)(millis() - t_debut_etat);
+  if(duree_etat<0)
+  {
+    duree_etat=0;
+    t_debut_etat=millis();
+  }
   ReadPodoState();
-    if (Reset_counters)
-    {
-      nb_total_demarrage = 0;
-      temps_total_brossage = 0;
-      Reset_counters = false;
-      UpdateSavedDatas();
-    }
-    if (ResetGravity) SetGravity();
+  if (Reset_counters)
+  {
+    nb_total_demarrage = 0;
+    temps_total_brossage = 0;
+    Reset_counters = false;
+    UpdateSavedDatas();
+  }
+  if (ResetGravity)
+    SetGravity();
   UpdatePodoState();
   int val_etat = (int)etat;
-  
-  Serial.print("  Angle : ");
-  Serial.println(angle_brut);
+
+  // Serial.print("  Angle : ");
+  // Serial.println(angle);
 
   switch (val_etat)
   {
