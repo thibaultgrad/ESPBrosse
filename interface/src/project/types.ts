@@ -17,6 +17,7 @@ export interface SettingsDataState{
   Angle_declenchement : number;
   MS_DEMARRAGE_MOTEUR : number;
   MS_ARRET: number;
+
 }
 
 export interface LightMqttSettings { 
@@ -32,4 +33,5 @@ export interface BrosseState{
   duree_etat:number;
   ResetGravity:boolean;
   courant:number;
+  startMotor:boolean;
 }

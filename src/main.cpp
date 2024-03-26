@@ -116,6 +116,8 @@ float currentOffset2 = 0; // to offset value due to calculation error from squar
 
 float Courant = 0;
 
+bool StartMotor=false;
+
 // Objects
 Adafruit_MPU6050 mpu;
 
@@ -177,6 +179,7 @@ void UpdatePodoState()
         state.duree_etat = duree_etat / 1000.0f;
         state.ResetGravity = false;
         state.courant = Courant;
+        state.startMotor=false;
         return StateUpdateResult::CHANGED;
       },
       "Jean");
@@ -186,7 +189,8 @@ void ReadPodoState()
   brosseStateService.read([](BrosseState _state)
                           {
     Reset_counters = _state.ResetJournal;
-    ResetGravity=_state.ResetGravity; });
+    ResetGravity=_state.ResetGravity;
+    StartMotor=_state.startMotor; });
 }
 void MoteursOff()
 {
@@ -388,7 +392,7 @@ void loop()
   {
   case (int)Attente:
     echantillonnagecourant();
-    if (angle >= AngleDeclenchement)
+    if (angle >= AngleDeclenchement || StartMotor)
     {
       etat = Demarrage;
       t_debut_etat = millis();

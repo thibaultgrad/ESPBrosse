@@ -39,10 +39,13 @@ function BrosseStateWebSocketControllerForm(props: BrosseStateWebSocketControlle
   const { data, saveData, setData } = props;
 
   const changepresence = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ ResetJournal: event.target.checked,etat:data.etat,angle:data.angle,duree_etat:data.duree_etat,ResetGravity:false,courant:data.courant }, saveData);
+    setData({ ResetJournal: event.target.checked,etat:data.etat,angle:data.angle,duree_etat:data.duree_etat,ResetGravity:false,courant:data.courant,startMotor:data.startMotor }, saveData);
   }
   const changegrav = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ ResetGravity: event.target.checked,etat:data.etat,angle:data.angle,duree_etat:data.duree_etat,ResetJournal:false ,courant:data.courant}, saveData);
+    setData({ ResetGravity: event.target.checked,etat:data.etat,angle:data.angle,duree_etat:data.duree_etat,ResetJournal:false ,courant:data.courant,startMotor:data.startMotor}, saveData);
+  }
+  const changeStart = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setData({ startMotor: event.target.checked,etat:data.etat,angle:data.angle,duree_etat:data.duree_etat,ResetJournal:false ,courant:data.courant,ResetGravity:false}, saveData);
   }
 
   return (
@@ -63,7 +66,11 @@ function BrosseStateWebSocketControllerForm(props: BrosseStateWebSocketControlle
           <FormControlLabel
         control={<Switch checked={data.ResetGravity} onChange={changegrav} name="checkedB" />}
         label="Remise à zero de mesure angle"
-      />
+      />         
+       <FormControlLabel
+      control={<Switch checked={data.startMotor} onChange={changeStart} name="checkedC" />}
+      label="Démarrage moteur"
+    />
     <Typography variant="body1">
     Temps passé dans cet état : <NumberFormat value={data.duree_etat} displayType={'text'} decimalSeparator=',' decimalScale={2} /> s
     </Typography>

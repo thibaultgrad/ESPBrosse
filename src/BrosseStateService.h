@@ -18,6 +18,7 @@ class BrosseState {
   float courant;
   bool ResetJournal;
   bool ResetGravity;
+  bool startMotor;
   float duree_etat;
 
   static void read(BrosseState& settings, JsonObject& root) {
@@ -27,6 +28,8 @@ class BrosseState {
     root["ResetGravity"] = settings.ResetGravity;
     root["duree_etat"]=settings.duree_etat;
     root["courant"]=settings.courant;
+    root["startMotor"]=settings.startMotor;
+
   }
 
   static StateUpdateResult update(JsonObject& root, BrosseState& savedState) {
@@ -43,6 +46,7 @@ class BrosseState {
 
     bool newPres = root.containsKey("ResetJournal") ? root["ResetJournal"] : 0;
     bool newGrav = root.containsKey("ResetGravity") ? root["ResetGravity"] : 0;
+    bool newStartMotor = root.containsKey("startMotor") ? root["startMotor"] : 0;
     float newTPassage = root.containsKey("angle") ? root["angle"]:1;
     float newCour = root.containsKey("courant") ? root["courant"]:1;
     float newDuree = root.containsKey("duree_etat") ? root["duree_etat"]:1;
@@ -52,6 +56,7 @@ class BrosseState {
       savedState.ResetJournal=newPres;
       savedState.duree_etat=newDuree;
       savedState.courant=newCour;
+      savedState.startMotor=newStartMotor;
       return StateUpdateResult::CHANGED;
   }
 
