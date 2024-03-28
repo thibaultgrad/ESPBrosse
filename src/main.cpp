@@ -136,7 +136,7 @@ void ReadSettings()
     MS_BROSSAGE = _state.MS_Brossage;
     MS_SurCourant = _state.MS_Surcourant;
     MS_DEMARRAGE_MOTEUR = _state.MS_DEMARRAGE_MOTEUR;
-    IMax = _state.Courant_max;
+    IMax = _state.Courant_max/1000.0f;
     Date_RAZ = _state.Date_RAZ;
     Reset_counters = _state.Reset_counters;
     AngleDeclenchement=_state.Angle_declenchement;

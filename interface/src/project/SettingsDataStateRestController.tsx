@@ -51,7 +51,7 @@ function SettingsDataStateRestControllerForm(props: SettingsDataStateRestControl
       <TextField id="standard-basic" label="Duréee d'un cycle de brossage (ms)" onChange={handleValueChange('MS_Brossage')} value={data.MS_Brossage} color="secondary" />
       <TextField id="standard-basic" label="Durée d'arret apres surcourant (ms)" onChange={handleValueChange('MS_Surcourant')} value={data.MS_Surcourant} color="secondary" />
       <TextField id="standard-basic" label="Date de remise à zero" type="datetime-local" onChange={handleValueChange('Date_RAZ')} value={data.Date_RAZ} color="secondary" />
-      <TextField id="standard-basic" label="Courant Max (A)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
+      <TextField id="standard-basic" label="Courant Max (mA)" onChange={handleValueChange('Courant_max')} value={data.Courant_max} color="secondary" />
       <TextField id="standard-basic" label="Angle déclenchement" onChange={handleValueChange('Angle_declenchement')} value={data.Angle_declenchement} color="secondary" />
       <TextField id="standard-basic" label="Durée demarrage moteur (ms):" onChange={handleValueChange('MS_DEMARRAGE_MOTEUR')} value={data.MS_DEMARRAGE_MOTEUR} color="secondary" />
       <TextField id="standard-basic" label="Durée arret moteur (ms):" onChange={handleValueChange('MS_ARRET')} value={data.MS_ARRET} color="secondary" />
