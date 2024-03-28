@@ -295,6 +295,9 @@ void echantillonnagecourant()
   currentSampleRead = analogRead(pinCourant) - 512 + currentOffset1; /* read the sample value including offset value*/
   currentSampleSum = currentSampleSum + sq(currentSampleRead);       /* accumulate total analog values for each sample readings*/
 
+  Serial.print("Courant : ");
+  Serial.println(analogRead(pinCourant));
+  
   currentSampleCount += 1;
   // tension += 0.01;/* to count and move on to the next following count */
   /* to reset the time again so that next cycle can start again*/
