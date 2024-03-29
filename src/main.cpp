@@ -92,8 +92,13 @@ int i = 0;
 
 int indexechantilon = 0;
 uint8_t echantillon_angle[TAILLE_TABLEAU_ECHANTILLONS] = {0};
-
-float mVperAmpValue = 100;   // If using ACS712 current module : for 5A module key in 185, for 20A module key in 100, for 30A module key in 66
+ //Ohms resistance entre Aout ACS712 et Ain Wemos
+#define rAoAI (float)3620
+//Ohms resistance entre Ai wemos et GND
+#define rAIGnd (float)5970
+// Ratio de pont diviseur
+#define Dividerration (float)(rAIGnd/(rAIGnd+rAoAI))
+float mVperAmpValue = 100.0*Dividerration;   // If using ACS712 current module : for 5A module key in 185, for 20A module key in 100, for 30A module key in 66
                              // If using "Hall-Effect" Current Transformer, key in value using this formula: mVperAmp = maximum voltage range (in milli volt) / current rating of CT
                              // For example, a 20A Hall-Effect Current Transformer rated at 20A, 2.5V +/- 0.625V, mVperAmp will be 625 mV / 20A = 31.25mV/A
 float offsetSampleRead = 0;  /* to read the value of a sample for offset purpose later */
@@ -117,6 +122,8 @@ float currentOffset2 = 0; // to offset value due to calculation error from squar
 float Courant = 0;
 
 bool StartMotor=false;
+
+
 
 // Objects
 Adafruit_MPU6050 mpu;
@@ -307,7 +314,7 @@ void echantillonnagecourant()
     currentMean = currentSampleSum / currentSampleCount;                        /* average accumulated analog values*/
     RMSCurrentMean = sqrt(currentMean);                                         /* square root of the average value*/
     adjustRMSCurrentMean = RMSCurrentMean + currentOffset2;                     /* square root of the average value including offset value */
-    FinalRMSCurrent = (((adjustRMSCurrentMean / 1024) * 5000) / mVperAmpValue); /* calculate the final RMS current*/
+    FinalRMSCurrent = (((adjustRMSCurrentMean / 1023.0) * 3200.0) / (mVperAmpValue)); /* calculate the final RMS current*/
     Courant = FinalRMSCurrent;
     currentSampleSum = 0;   /* to reset accumulate sample values for the next cycle */
     currentSampleCount = 0; /* to reset number of sample for the next cycle */
@@ -324,7 +331,9 @@ void setup()
 
   digitalWrite(pin_moteur_Sens_rotation, HIGH);
 
-  //Serial.begin(SERIAL_BAUD_RATE);
+  Serial.begin(SERIAL_BAUD_RATE);
+
+  Serial.println ((float)Dividerration);
 
   // start the framework and demo project
   esp8266React.begin();
